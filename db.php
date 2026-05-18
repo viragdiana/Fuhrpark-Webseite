@@ -18,15 +18,17 @@ try {
     ";
     $pdo->exec($createTableSQL);
 
+    // Inside db.php
     $pdo->exec("
-        CREATE TABLE IF NOT EXISTS fahrer (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            vorname TEXT NOT NULL,
-            nachname TEXT NOT NULL,
-            mitarbeiter_id TEXT NOT NULL,
-            fuehrerscheinklassen TEXT NOT NULL
-        );
-    ");
+    CREATE TABLE IF NOT EXISTS fahrer (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vorname TEXT NOT NULL,
+        nachname TEXT NOT NULL,
+        mitarbeiter_id TEXT NOT NULL,
+        fuehrerscheinklassen TEXT NOT NULL,
+        naechste_pruefung TEXT NOT NULL -- Added for Issue #5 tracking
+    );
+");
 
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());

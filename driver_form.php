@@ -6,6 +6,7 @@ $vorname = '';
 $nachname = '';
 $mitarbeiter_id = '';
 $saved_klassen = [];
+$naechste_pruefung = '';
 $pageTitle = "Fahrerprofil anlegen";
 
 if (isset($_GET['id'])) {
@@ -20,12 +21,12 @@ if (isset($_GET['id'])) {
         $vorname = $driver['vorname'];
         $nachname = $driver['nachname'];
         $mitarbeiter_id = $driver['mitarbeiter_id'];
-        // Split the comma-separated string back into an array for the checkboxes
+        $naechste_pruefung = $driver['naechste_pruefung'];
         if (!empty($driver['fuehrerscheinklassen'])) {
             $saved_klassen = explode(', ', $driver['fuehrerscheinklassen']);
         }
     } else {
-        die("Fahrer nicht gefunden.");
+        die("Fahrereintrag nicht gefunden.");
     }
 }
 
@@ -33,19 +34,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $vorname = $_POST['vorname'];
     $nachname = $_POST['nachname'];
     $mitarbeiter_id = $_POST['mitarbeiter_id'];
+    $naechste_pruefung = $_POST['naechste_pruefung'];
 
     $klassen_array = $_POST['klassen'] ?? [];
     $fuehrerscheinklassen = implode(', ', $klassen_array);
 
     if (!empty($_POST['id'])) {
         $updateId = $_POST['id'];
-        $sql = "UPDATE fahrer SET vorname = ?, nachname = ?, mitarbeiter_id = ?, fuehrerscheinklassen = ? WHERE id = ?";
+        $sql = "UPDATE fahrer SET vorname = ?, nachname = ?, mitarbeiter_id = ?, fuehrerscheinklassen = ?, naechste_pruefung = ? WHERE id = ?";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$vorname, $nachname, $mitarbeiter_id, $fuehrerscheinklassen, $updateId]);
+        $stmt->execute([$vorname, $nachname, $mitarbeiter_id, $fuehrerscheinklassen, $naechste_pruefung, $updateId]);
     } else {
-        $sql = "INSERT INTO fahrer (vorname, nachname, mitarbeiter_id, fuehrerscheinklassen) VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO fahrer (vorname, nachname, mitarbeiter_id, fuehrerscheinklassen, naechste_pruefung) VALUES (?, ?, ?, ?, ?)";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$vorname, $nachname, $mitarbeiter_id, $fuehrerscheinklassen]);
+        $stmt->execute([$vorname, $nachname, $mitarbeiter_id, $fuehrerscheinklassen, $naechste_pruefung]);
     }
 
     header("Location: drivers_list.php");
@@ -53,8 +55,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-    <!DOCTYPE html>
-    <html lang="de">
+<!DOCTYPE html>
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <title><?= $pageTitle ?></title>
@@ -85,7 +87,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">Mitarbeiter ID *</label>
-                            <input type="text" name="mitarbeiter_id" class="form-control" value="<?= htmlspecialchars($mitarbeiter_id) ?>" required placeholder="z.B. EMP-104">
+                            <input type="text" name="mitarbeiter_id" class="form-control" value="<?= htmlspecialchars($mitarbeiter_id) ?>" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-primary">Nächste Führerscheinprüfung *</label>
+                            <input type="date" name="naechste_pruefung" class="form-control" value="<?= htmlspecialchars($naechste_pruefung) ?>" required>
                         </div>
 
                         <div class="mb-4">
@@ -102,14 +109,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
                                 <?php endforeach; ?>
                             </div>
-                            <small class="text-muted">Wählen Sie alle Klassen aus, die der Mitarbeiter besitzt.</small>
                         </div>
 
                         <div class="d-flex justify-content-between">
                             <a href="drivers_list.php" class="btn btn-outline-secondary">Abbrechen</a>
-                            <button type="submit" class="btn btn-dark">
-                                <?= $id ? 'Änderungen speichern' : 'Profil anlegen' ?>
-                            </button>
+                            <button type="submit" class="btn btn-dark"><?= $id ? 'Änderungen speichern' : 'Profil anlegen' ?></button>
                         </div>
                     </form>
                 </div>
@@ -119,4 +123,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 
 </body>
-    </html><?php
+</html>
