@@ -18,6 +18,16 @@ try {
     ";
     $pdo->exec($createTableSQL);
 
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS fahrer (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vorname TEXT NOT NULL,
+            nachname TEXT NOT NULL,
+            mitarbeiter_id TEXT NOT NULL,
+            fuehrerscheinklassen TEXT NOT NULL
+        );
+    ");
+
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
 }
