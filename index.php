@@ -58,7 +58,11 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php foreach ($fahrzeuge as $auto): ?>
                     <tr>
                         <td><?= htmlspecialchars($auto['id']) ?></td>
-                        <td class="fw-bold"><?= htmlspecialchars($auto['kennzeichen']) ?></td>
+                        <td class="fw-bold">
+                            <a href="vehicle_details.php?id=<?= $auto['id'] ?>" class="text-decoration-none text-primary">
+                                <?= htmlspecialchars($auto['kennzeichen']) ?>
+                            </a>
+                        </td>
                         <td><?= htmlspecialchars($auto['fahrzeug_typ']) ?></td>
                         <td><?= htmlspecialchars($auto['marke']) ?></td>
                         <td><?= htmlspecialchars($auto['modell']) ?></td>
@@ -76,7 +80,9 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </span>
                         </td>
                         <td>
-                            <a href="vehicle_form.php?id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-primary">Bearbeiten</a>
+                            <a href="vehicle_details.php?id=<?= $auto['id'] ?>" class="btn btn-sm btn-primary">Details</a>
+
+                            <a href="vehicle_form.php?id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary">Bearbeiten</a>
                             <a href="delete_vehicle.php?id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Fahrzeug wirklich löschen?');">Löschen</a>
                         </td>
                     </tr>
