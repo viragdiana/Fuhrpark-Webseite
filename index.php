@@ -1,8 +1,15 @@
 <?php
 require 'db.php';
 
-// Fetch all vehicles from the database
-$stmt = $pdo->query("SELECT * FROM fahrzeuge");
+$statusFilter = $_GET['status'] ?? '';
+
+if ($statusFilter && $statusFilter !== 'Alle') {
+    $stmt = $pdo->prepare("SELECT * FROM fahrzeuge WHERE status = ?");
+    $stmt->execute([$statusFilter]);
+} else {
+    $stmt = $pdo->query("SELECT * FROM fahrzeuge");
+}
+
 $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -18,7 +25,19 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="container mt-5 mb-5">
     <h1 class="mb-4">Fahrzeugverwaltung (Dashboard)</h1>
 
-    <a href="vehicle_form.php" class="btn btn-success mb-3">+ Neues Fahrzeug hinzufügen</a>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="vehicle_form.php" class="btn btn-success">+ Neues Fahrzeug hinzufügen</a>
+
+        <form method="GET" action="index.php" class="d-flex align-items-center">
+            <label class="me-2 fw-bold text-secondary">Filter:</label>
+            <select name="status" class="form-select shadow-sm" onchange="this.form.submit()" style="width: auto;">
+                <option value="Alle" <?= $statusFilter == 'Alle' ? 'selected' : '' ?>>Alle Fahrzeuge</option>
+                <option value="Aktiv" <?= $statusFilter == 'Aktiv' ? 'selected' : '' ?>>Aktiv</option>
+                <option value="In Reparatur" <?= $statusFilter == 'In Reparatur' ? 'selected' : '' ?>>In Reparatur</option>
+                <option value="Ausgemustert" <?= $statusFilter == 'Ausgemustert' ? 'selected' : '' ?>>Ausgemustert</option>
+            </select>
+        </form>
+    </div>
 
     <div class="card shadow-sm">
         <div class="card-body table-responsive">
@@ -48,7 +67,6 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </td>
                         <td>
                             <?php
-                            // Color-code the status badges
                             $statusClass = 'bg-secondary';
                             if ($auto['status'] == 'Aktiv') $statusClass = 'bg-success';
                             if ($auto['status'] == 'In Reparatur') $statusClass = 'bg-warning text-dark';
@@ -65,7 +83,13 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php endforeach; ?>
 
                 <?php if (empty($fahrzeuge)): ?>
-                    <tr><td colspan="8" class="text-center text-muted py-4">Keine Fahrzeuge im System. Klicken Sie auf "Neues Fahrzeug hinzufügen", um zu beginnen.</td></tr>
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <?= $statusFilter && $statusFilter !== 'Alle'
+                                    ? "Keine Fahrzeuge mit dem Status '" . htmlspecialchars($statusFilter) . "' gefunden."
+                                    : 'Keine Fahrzeuge im System. Klicken Sie auf "Neues Fahrzeug hinzufügen", um zu beginnen.' ?>
+                        </td>
+                    </tr>
                 <?php endif; ?>
                 </tbody>
             </table>

@@ -1,5 +1,4 @@
 <?php
-// vehicle_form.php
 require 'db.php';
 
 $id = null;

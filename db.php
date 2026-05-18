@@ -1,5 +1,4 @@
 <?php
-// db.php
 $dbFile = __DIR__ . '/fuhrpark.db';
 
 try {
