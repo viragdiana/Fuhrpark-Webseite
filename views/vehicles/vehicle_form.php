@@ -8,9 +8,10 @@ $marke = '';
 $modell = '';
 $vin = '';
 $status = 'Aktiv';
+$naechster_tuev = '';
+$naechster_service = '';
 $pageTitle = "Neues Fahrzeug anlegen";
 
-// 1. EDIT MODE Check
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
     $pageTitle = "Fahrzeugprofil bearbeiten";
@@ -26,12 +27,13 @@ if (isset($_GET['id'])) {
         $modell = $vehicle['modell'];
         $vin = $vehicle['vin'];
         $status = $vehicle['status'];
+        $naechster_tuev = $vehicle['naechster_tuev'];
+        $naechster_service = $vehicle['naechster_service'];
     } else {
         die("Fahrzeug nicht gefunden.");
     }
 }
 
-// 2. SAVE LOGIC (Insert or Update)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $kennzeichen = $_POST['kennzeichen'];
     $fahrzeug_typ = $_POST['fahrzeug_typ'];
@@ -39,18 +41,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $modell = $_POST['modell'];
     $vin = $_POST['vin'];
     $status = $_POST['status'];
+    $naechster_tuev = $_POST['naechster_tuev'];
+    $naechster_service = $_POST['naechster_service'];
 
     if (!empty($_POST['id'])) {
-        // UPDATE Existing Profile
         $updateId = $_POST['id'];
-        $sql = "UPDATE fahrzeuge SET kennzeichen = ?, fahrzeug_typ = ?, marke = ?, modell = ?, vin = ?, status = ? WHERE id = ?";
+        $sql = "UPDATE fahrzeuge SET kennzeichen = ?, fahrzeug_typ = ?, marke = ?, modell = ?, vin = ?, status = ?, naechster_tuev = ?, naechster_service = ? WHERE id = ?";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$kennzeichen, $fahrzeug_typ, $marke, $modell, $vin, $status, $updateId]);
+        $stmt->execute([$kennzeichen, $fahrzeug_typ, $marke, $modell, $vin, $status, $naechster_tuev, $naechster_service, $updateId]);
     } else {
-        // INSERT New Profile
-        $sql = "INSERT INTO fahrzeuge (kennzeichen, fahrzeug_typ, marke, modell, vin, status) VALUES (?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO fahrzeuge (kennzeichen, fahrzeug_typ, marke, modell, vin, status, naechster_tuev, naechster_service) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$kennzeichen, $fahrzeug_typ, $marke, $modell, $vin, $status]);
+        $stmt->execute([$kennzeichen, $fahrzeug_typ, $marke, $modell, $vin, $status, $naechster_tuev, $naechster_service]);
     }
 
     header("Location: index.php");
@@ -67,8 +69,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body class="bg-light">
 
-<?php include '../../components/navbar.php'; ?>
-
 <div class="container mt-5 mb-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -83,14 +83,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label text-danger fw-bold">Kennzeichen *</label>
-                                <input type="text" name="kennzeichen" class="form-control" value="<?= htmlspecialchars($kennzeichen) ?>" required placeholder="z.B. CJ 12 ABC">
+                                <input type="text" name="kennzeichen" class="form-control" value="<?= htmlspecialchars($kennzeichen) ?>" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-danger fw-bold">Fahrzeugtyp *</label>
                                 <select name="fahrzeug_typ" class="form-select" required>
                                     <option value="" disabled <?= empty($fahrzeug_typ) ? 'selected' : '' ?>>Bitte wählen...</option>
-                                    <option value="PKW" <?= $fahrzeug_typ == 'PKW' ? 'selected' : '' ?>>PKW (Car)</option>
-                                    <option value="Transporter" <?= $fahrzeug_typ == 'Transporter' ? 'selected' : '' ?>>Transporter (Van)</option>
+                                    <option value="PKW" <?= $fahrzeug_typ == 'PKW' ? 'selected' : '' ?>>PKW</option>
+                                    <option value="Transporter" <?= $fahrzeug_typ == 'Transporter' ? 'selected' : '' ?>>Transporter</option>
                                 </select>
                             </div>
                         </div>
@@ -106,7 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
                         </div>
 
-                        <div class="row mb-4">
+                        <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label text-danger fw-bold">Fahrgestellnummer (VIN) *</label>
                                 <input type="text" name="vin" class="form-control" value="<?= htmlspecialchars($vin) ?>" required style="text-transform: uppercase;">
@@ -118,6 +118,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <option value="In Reparatur" <?= $status == 'In Reparatur' ? 'selected' : '' ?>>In Reparatur</option>
                                     <option value="Ausgemustert" <?= $status == 'Ausgemustert' ? 'selected' : '' ?>>Ausgemustert</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4 border-top pt-3 mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-primary fw-bold">Nächster TÜV *</label>
+                                <input type="date" name="naechster_tuev" class="form-control" value="<?= htmlspecialchars($naechster_tuev) ?>" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-primary fw-bold">Nächster Service *</label>
+                                <input type="date" name="naechster_service" class="form-control" value="<?= htmlspecialchars($naechster_service) ?>" required>
                             </div>
                         </div>
 

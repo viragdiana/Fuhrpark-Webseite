@@ -25,9 +25,10 @@ if ($auto['status'] == 'Aktiv') $statusClass = 'bg-success-subtle text-success b
 if ($auto['status'] == 'In Reparatur') $statusClass = 'bg-warning-subtle text-warning-emphasis border border-warning';
 if ($auto['status'] == 'Ausgemustert') $statusClass = 'bg-danger-subtle text-danger border border-danger';
 
-$sofer = "Neasignat";
+$sofer = "Nicht zugewiesen";
 if (!empty($auto['vorname']) && !empty($auto['nachname'])) {
-    $sofer = htmlspecialchars($auto['vorname']) . " vehicle_details.php" . htmlspecialchars($auto['nachname']);
+    // FIXED: Removed the stray "vehicle_details.php" string from the middle of the name
+    $sofer = htmlspecialchars($auto['vorname']) . " " . htmlspecialchars($auto['nachname']);
 }
 
 $stmtWartung = $pdo->prepare("SELECT * FROM wartung WHERE fahrzeug_id = ? ORDER BY datum DESC");
@@ -125,7 +126,8 @@ foreach ($wartungen as $w) {
     <div class="info-card shadow-sm p-4 mb-4">
         <h2 class="section-title pb-3 mb-4">Fahrzeugdaten</h2>
 
-        <div class="row g-4">
+        <div class="row g-4 align-items-center">
+
             <div class="col-md-6">
                 <div class="module-card shadow-sm p-4 h-100 d-flex flex-column">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -137,7 +139,7 @@ foreach ($wartungen as $w) {
                         </div>
                     </div>
                     <div class="mt-auto text-center py-3">
-                        <?php if ($sofer === "Neasignat" || $sofer === "Nicht zugewiesen" || empty($auto['vorname'])): ?>
+                        <?php if ($sofer === "Nicht zugewiesen" || empty($auto['vorname'])): ?>
                             <div class="fs-1 text-light mb-2"><i class="bi bi-person-x"></i></div>
                             <p class="small text-muted mb-3">Kein aktiver Fahrer zugewiesen.</p>
                             <a href="../drivers/assign_driver.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-primary">
@@ -145,7 +147,7 @@ foreach ($wartungen as $w) {
                             </a>
                         <?php else: ?>
                             <div class="fs-1 text-primary mb-2"><i class="bi bi-person-check-fill"></i></div>
-                            <h4 class="fw-bold text-dark mb-0"><?= htmlspecialchars($auto['vorname']) . ' vehicle_details.php' . htmlspecialchars($auto['nachname']) ?></h4>
+                            <h4 class="fw-bold text-dark mb-0"><?= htmlspecialchars($auto['vorname']) . ' ' . htmlspecialchars($auto['nachname']) ?></h4>
                             <div class="mt-3">
                                 <a href="../drivers/assign_driver.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-arrow-left-right me-1"></i> Fahrer wechseln
@@ -156,30 +158,32 @@ foreach ($wartungen as $w) {
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="meta-label">Kennzeichen</div>
-                <div class="meta-value text-uppercase fw-bold"><?= htmlspecialchars($auto['kennzeichen']) ?></div>
+            <div class="col-md-6">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="meta-label">Kennzeichen</div>
+                        <div class="meta-value text-uppercase fw-bold"><?= htmlspecialchars($auto['kennzeichen']) ?></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="meta-label">VIN</div>
+                        <div class="meta-value" style="font-family: monospace; letter-spacing: 0.02em;"><?= htmlspecialchars($auto['vin']) ?></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="meta-label">Typ</div>
+                        <div class="meta-value"><?= htmlspecialchars($auto['fahrzeug_typ']) ?></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="meta-label">Marke / Modell</div>
+                        <div class="meta-value"><?= htmlspecialchars($auto['marke']) ?> <?= htmlspecialchars($auto['modell']) ?></div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-4">
-                <div class="meta-label">VIN</div>
-                <div class="meta-value" style="font-family: monospace; letter-spacing: 0.02em;"><?= htmlspecialchars($auto['vin']) ?></div>
-            </div>
-            <div class="col-md-4">
-                <div class="meta-label">Typ</div>
-                <div class="meta-value"><?= htmlspecialchars($auto['fahrzeug_typ']) ?></div>
-            </div>
-            <div class="col-md-4">
-                <div class="meta-label">Marke</div>
-                <div class="meta-value"><?= htmlspecialchars($auto['marke']) ?></div>
-            </div>
-            <div class="col-md-4">
-                <div class="meta-label">Modell</div>
-                <div class="meta-value"><?= htmlspecialchars($auto['modell']) ?></div>
-            </div>
+
         </div>
     </div>
 
     <div class="row g-4">
+
         <div class="col-md-6">
             <div class="module-card border-tuv shadow-sm p-4 h-100 d-flex flex-column">
                 <div class="d-flex justify-content-between align-items-start mb-3">
@@ -187,15 +191,25 @@ foreach ($wartungen as $w) {
                         <span class="fs-3 text-secondary"><i class="bi bi-file-earmark-text"></i></span>
                         <div>
                             <div class="module-title">TÜV</div>
-                            <div class="module-subtitle">Technischer Überwachungsverein</div>
+                            <div class="module-subtitle">Hauptuntersuchung</div>
                         </div>
                     </div>
-                    <span class="alert-icon"><i class="bi bi-exclamation-triangle"></i></span>
+                    <?php
+                    $tuevDate = $auto['naechster_tuev'] ?: '2099-12-31';
+                    $isTuevDue = (substr($tuevDate, 0, 7) == date('Y-m') || $tuevDate < date('Y-m-d'));
+                    ?>
+                    <?php if ($isTuevDue): ?>
+                        <span class="alert-icon text-danger"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                    <?php endif; ?>
                 </div>
                 <div class="mt-2">
                     <div class="text-muted small">Ablaufdatum:</div>
-                    <div class="fw-bold fs-5 text-dark">15.06.2026</div>
-                    <div class="text-warning small mt-1">Noch 28 Tage</div>
+                    <div class="fw-bold fs-5 <?= $isTuevDue ? 'text-danger' : 'text-dark' ?>">
+                        <?= date('d.m.Y', strtotime($tuevDate)) ?>
+                    </div>
+                    <?php if ($tuevDate < date('Y-m-d')): ?>
+                        <div class="text-danger small mt-1 fw-bold">Überfällig!</div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -210,107 +224,112 @@ foreach ($wartungen as $w) {
                             <div class="module-subtitle">Vorbeugende Wartung</div>
                         </div>
                     </div>
-                    <span class="alert-icon"><i class="bi bi-exclamation-triangle"></i></span>
+                    <?php
+                    $serviceDate = $auto['naechster_service'] ?: '2099-12-31';
+                    $isServiceDue = (substr($serviceDate, 0, 7) == date('Y-m') || $serviceDate < date('Y-m-d'));
+                    ?>
+                    <?php if ($isServiceDue): ?>
+                        <span class="alert-icon text-danger"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                    <?php endif; ?>
                 </div>
                 <div class="mt-2">
-                    <div class="text-muted small">Empfohlene Dienstleistung:</div>
-                    <div class="fw-bold fs-5 text-dark">01.06.2026</div>
-                    <div class="text-muted small">oder alle 15.000 km</div>
-                    <div class="text-muted small mt-1" style="color: #94a3b8 !important;">Noch 800 km</div>
+                    <div class="text-muted small">Fälligkeitsdatum:</div>
+                    <div class="fw-bold fs-5 <?= $isServiceDue ? 'text-danger' : 'text-dark' ?>">
+                        <?= date('d.m.Y', strtotime($serviceDate)) ?>
+                    </div>
+                    <?php if ($serviceDate < date('Y-m-d')): ?>
+                        <div class="text-danger small mt-1 fw-bold">Überfällig!</div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
 
-                <div class="col-md-6">
-                    <div class="module-card border-reifen shadow-sm p-4 h-100 d-flex flex-column justify-content-between">
-                        <div class="d-flex justify-content-between align-items-start mb-4">
-                            <div class="d-flex gap-3">
-                                <span class="fs-3 text-secondary"><i class="bi bi-speedometer2"></i></span>
-                                <div>
-                                    <div class="module-title">Reifenzustand</div>
-                                    <div class="module-subtitle">Allgemeiner Verschleiß</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-baseline mt-auto">
-                            <div class="text-muted small">Verbleibende Kapazität:</div>
-                            <div class="fw-bold fs-3 text-dark">75%</div>
+        <div class="col-md-6">
+            <div class="module-card border-reifen shadow-sm p-4 h-100 d-flex flex-column justify-content-between">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div class="d-flex gap-3">
+                        <span class="fs-3 text-secondary"><i class="bi bi-speedometer2"></i></span>
+                        <div>
+                            <div class="module-title">Reifenzustand</div>
+                            <div class="module-subtitle">Allgemeiner Verschleiß</div>
                         </div>
                     </div>
                 </div>
+                <div class="d-flex justify-content-between align-items-baseline mt-auto">
+                    <div class="text-muted small">Verbleibende Kapazität:</div>
+                    <div class="fw-bold fs-3 text-dark">75%</div>
+                </div>
+            </div>
+        </div>
 
-                <div class="col-md-6">
-                    <div class="module-card border-kfz shadow-sm p-4 h-100 d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="d-flex gap-3">
-                                <span class="fs-3 text-secondary"><i class="bi bi-file-earmark-medical"></i></span>
-                                <div>
-                                    <div class="module-title">Kfz-Haftpflichtversicherung</div>
-                                    <div class="module-subtitle">Allianz</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-2">
-                            <div class="text-muted small">Versicherungspolice: RCA123456</div>
-                            <div class="text-muted small">Gültig bis: 20.05.2026</div>
+        <div class="col-md-6">
+            <div class="module-card border-kfz shadow-sm p-4 h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex gap-3">
+                        <span class="fs-3 text-secondary"><i class="bi bi-file-earmark-medical"></i></span>
+                        <div>
+                            <div class="module-title">Kfz-Haftpflichtversicherung</div>
+                            <div class="module-subtitle">Allianz</div>
                         </div>
                     </div>
                 </div>
-
-            </div>
-    <div class="col-12 mt-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                <h5 class="mb-0 text-dark fw-bold">
-                    <i class="bi bi-journal-text me-2 text-primary"></i>Service- & Reparaturhistorie
-                </h5>
-                <a href="../service/service_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-dark shadow-sm">
-                    <i class="bi bi-plus-lg me-1"></i> Wartung protokollieren
-                </a>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                        <tr>
-                            <th class="ps-4">Datum</th>
-                            <th>Werkstatt</th>
-                            <th>Art der Reparatur</th>
-                            <th class="text-end pe-4">Kosten</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <?php foreach ($wartungen as $w): ?>
-                            <tr>
-                                <td class="ps-4"><?= date('d.m.Y', strtotime($w['datum'])) ?></td>
-                                <td><i class="bi bi-shop text-muted me-2"></i><?= htmlspecialchars($w['werkstatt']) ?></td>
-                                <td><?= htmlspecialchars($w['reparatur_typ']) ?></td>
-                                <td class="text-end pe-4 fw-bold"><?= number_format($w['kosten'], 2, ',', '.') ?> €</td>
-                            </tr>
-                        <?php endforeach; ?>
-
-                        <?php if (empty($wartungen)): ?>
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-5">
-                                    <i class="bi bi-wrench fs-2 text-light d-block mb-2"></i>
-                                    Keine historischen Service-Einträge vorhanden.
-                                </td>
-                            </tr>
-                        <?php else: ?>
-                            <tr class="table-light border-top-2">
-                                <td colspan="3" class="text-end fw-bold text-uppercase text-muted" style="font-size: 0.85rem;">Gesamtkosten:</td>
-                                <td class="text-end pe-4 fw-bold fs-5 text-dark"><?= number_format($totalKosten, 2, ',', '.') ?> €</td>
-                            </tr>
-                        <?php endif; ?>
-                        </tbody>
-                    </table>
+                <div class="mt-2">
+                    <div class="text-muted small">Versicherungspolice: RCA123456</div>
+                    <div class="text-muted small">Gültig bis: 20.05.2026</div>
                 </div>
             </div>
         </div>
-    </div>
-        </div>
-    </div>
-</div>
 
-</body>
+        <div class="col-12 mt-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                    <h5 class="mb-0 text-dark fw-bold">
+                        <i class="bi bi-journal-text me-2 text-primary"></i>Service- & Reparaturhistorie
+                    </h5>
+                    <a href="../service/service_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-dark shadow-sm">
+                        <i class="bi bi-plus-lg me-1"></i> Wartung protokollieren
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Datum</th>
+                                <th>Werkstatt</th>
+                                <th>Art der Reparatur</th>
+                                <th class="text-end pe-4">Kosten</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <?php foreach ($wartungen as $w): ?>
+                                <tr>
+                                    <td class="ps-4"><?= date('d.m.Y', strtotime($w['datum'])) ?></td>
+                                    <td><i class="bi bi-shop text-muted me-2"></i><?= htmlspecialchars($w['werkstatt']) ?></td>
+                                    <td><?= htmlspecialchars($w['reparatur_typ']) ?></td>
+                                    <td class="text-end pe-4 fw-bold"><?= number_format($w['kosten'], 2, ',', '.') ?> €</td>
+                                </tr>
+                            <?php endforeach; ?>
+
+                            <?php if (empty($wartungen)): ?>
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-5">
+                                        <i class="bi bi-wrench fs-2 text-light d-block mb-2"></i>
+                                        Keine historischen Service-Einträge vorhanden.
+                                    </td>
+                                </tr>
+                            <?php else: ?>
+                                <tr class="table-light border-top-2">
+                                    <td colspan="3" class="text-end fw-bold text-uppercase text-muted" style="font-size: 0.85rem;">Gesamtkosten:</td>
+                                    <td class="text-end pe-4 fw-bold fs-5 text-dark"><?= number_format($totalKosten, 2, ',', '.') ?> €</td>
+                                </tr>
+                            <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div> </div> </body>
 </html>

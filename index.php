@@ -1,9 +1,21 @@
 <?php
 require 'config/db.php';
 
-$statusFilter = $_GET['status'] ?? '';
+$statusFilter = $_GET['status'] ?? 'Alle';
+$currentMonth = date('Y-m');
 
-if ($statusFilter && $statusFilter !== 'Alle') {
+if ($statusFilter === 'Warnungen') {
+    $sql = "SELECT fahrzeuge.*, fahrer.vorname, fahrer.nachname 
+            FROM fahrzeuge 
+            LEFT JOIN fahrer ON fahrzeuge.fahrer_id = fahrer.id 
+            WHERE substr(fahrzeuge.naechster_tuev, 1, 7) = :currMonth 
+               OR substr(fahrzeuge.naechster_service, 1, 7) = :currMonth
+               OR fahrzeuge.naechster_tuev < date('now')
+               OR fahrzeuge.naechster_service < date('now')";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['currMonth' => $currentMonth]);
+
+} elseif ($statusFilter && $statusFilter !== 'Alle') {
     $sql = "SELECT fahrzeuge.*, fahrer.vorname, fahrer.nachname 
             FROM fahrzeuge 
             LEFT JOIN fahrer ON fahrzeuge.fahrer_id = fahrer.id 
@@ -62,6 +74,11 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <form method="GET" action="index.php" class="m-0">
                 <select name="status" class="form-select shadow-sm border-0" onchange="this.form.submit()">
                     <option value="Alle" <?= $statusFilter == 'Alle' ? 'selected' : '' ?>>Alle Zustände</option>
+
+                    <option value="Warnungen" <?= $statusFilter == 'Warnungen' ? 'selected' : '' ?> class="text-danger fw-bold">
+                        ⚠️ Warnungen (Diesen Monat)
+                    </option>
+
                     <option value="Aktiv" <?= $statusFilter == 'Aktiv' ? 'selected' : '' ?>>Aktiv</option>
                     <option value="In Reparatur" <?= $statusFilter == 'In Reparatur' ? 'selected' : '' ?>>In Reparatur</option>
                     <option value="Ausgemustert" <?= $statusFilter == 'Ausgemustert' ? 'selected' : '' ?>>Ausgemustert</option>
@@ -118,7 +135,6 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                         <td>
                             <?php
-                            // FIXED: Removed the UI string mapping and using the database value directly
                             $badgeClass = 'bg-secondary';
 
                             if ($auto['status'] == 'Aktiv') {

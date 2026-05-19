@@ -15,7 +15,9 @@ try {
         modell TEXT NOT NULL,
         vin TEXT NOT NULL,
         status TEXT DEFAULT 'Aktiv',
-        fahrer_id INTEGER DEFAULT NULL
+        fahrer_id INTEGER DEFAULT NULL,
+        naechster_tuev TEXT NOT NULL,
+        naechster_service TEXT NOT NULL
     );
 ");
 
