@@ -27,7 +27,6 @@ if ($auto['status'] == 'Ausgemustert') $statusClass = 'bg-danger-subtle text-dan
 
 $sofer = "Nicht zugewiesen";
 if (!empty($auto['vorname']) && !empty($auto['nachname'])) {
-    // FIXED: Removed the stray "vehicle_details.php" string from the middle of the name
     $sofer = htmlspecialchars($auto['vorname']) . " " . htmlspecialchars($auto['nachname']);
 }
 
@@ -39,6 +38,10 @@ $totalKosten = 0;
 foreach ($wartungen as $w) {
     $totalKosten += $w['kosten'];
 }
+
+$stmtReifen = $pdo->prepare("SELECT * FROM reifen WHERE fahrzeug_id = ? ORDER BY saison DESC");
+$stmtReifen->execute([$id]);
+$reifenSaetze = $stmtReifen->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -245,19 +248,45 @@ foreach ($wartungen as $w) {
         </div>
 
         <div class="col-md-6">
-            <div class="module-card border-reifen shadow-sm p-4 h-100 d-flex flex-column justify-content-between">
-                <div class="d-flex justify-content-between align-items-start mb-4">
+            <div class="module-card border-reifen shadow-sm p-4 h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-3">
                     <div class="d-flex gap-3">
-                        <span class="fs-3 text-secondary"><i class="bi bi-speedometer2"></i></span>
+                        <span class="fs-3 text-secondary"><i class="bi bi-record-circle"></i></span>
                         <div>
                             <div class="module-title">Reifenzustand</div>
-                            <div class="module-subtitle">Allgemeiner Verschleiß</div>
+                            <div class="module-subtitle">Profiltiefe & Saison</div>
                         </div>
                     </div>
+                    <a href="tire_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Profiltiefe aktualisieren">
+                        <i class="bi bi-pencil"></i>
+                    </a>
                 </div>
-                <div class="d-flex justify-content-between align-items-baseline mt-auto">
-                    <div class="text-muted small">Verbleibende Kapazität:</div>
-                    <div class="fw-bold fs-3 text-dark">75%</div>
+
+                <div class="mt-2 flex-grow-1">
+                    <?php if (empty($reifenSaetze)): ?>
+                        <div class="text-muted small mt-3">Keine Reifensätze registriert.</div>
+                    <?php else: ?>
+                        <ul class="list-group list-group-flush mb-0 mt-2">
+                            <?php foreach ($reifenSaetze as $r):
+                                // ISSUE #12 CRITERIA: Check if depth is lower than 1.6mm
+                                $isLow = $r['profiltiefe'] < 1.6;
+                                ?>
+                                <li class="list-group-item px-0 d-flex justify-content-between align-items-center bg-transparent border-bottom-0 pb-1 pt-2">
+                                    <div class="text-secondary fw-medium">
+                                        <i class="bi <?= $r['saison'] == 'Winter' ? 'bi-snow' : ($r['saison'] == 'Sommer' ? 'bi-sun' : 'bi-cloud-sun') ?> me-2"></i>
+                                        <?= htmlspecialchars($r['saison']) ?>reifen
+                                    </div>
+
+                                    <div class="fw-bold fs-5 <?= $isLow ? 'text-danger' : 'text-dark' ?>">
+                                        <?= number_format($r['profiltiefe'], 1, ',', '.') ?> mm
+                                        <?php if ($isLow): ?>
+                                            <i class="bi bi-exclamation-triangle-fill text-danger ms-1" title="Kritische Profiltiefe! Gesetzliches Minimum (1,6 mm) unterschritten."></i>
+                                        <?php endif; ?>
+                                    </div>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
