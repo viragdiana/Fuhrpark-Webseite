@@ -30,7 +30,16 @@ if (!empty($auto['vorname']) && !empty($auto['nachname'])) {
     $sofer = htmlspecialchars($auto['vorname']) . " " . htmlspecialchars($auto['nachname']);
 }
 
+$stmtWartung = $pdo->prepare("SELECT * FROM wartung WHERE fahrzeug_id = ? ORDER BY datum DESC");
+$stmtWartung->execute([$id]);
+$wartungen = $stmtWartung->fetchAll(PDO::FETCH_ASSOC);
+
+$totalKosten = 0;
+foreach ($wartungen as $w) {
+    $totalKosten += $w['kosten'];
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -247,6 +256,56 @@ if (!empty($auto['vorname']) && !empty($auto['nachname'])) {
                 </div>
 
             </div>
+    <div class="col-12 mt-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                <h5 class="mb-0 text-dark fw-bold">
+                    <i class="bi bi-journal-text me-2 text-primary"></i>Service- & Reparaturhistorie
+                </h5>
+                <a href="service_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-dark shadow-sm">
+                    <i class="bi bi-plus-lg me-1"></i> Wartung protokollieren
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Datum</th>
+                            <th>Werkstatt</th>
+                            <th>Art der Reparatur</th>
+                            <th class="text-end pe-4">Kosten</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php foreach ($wartungen as $w): ?>
+                            <tr>
+                                <td class="ps-4"><?= date('d.m.Y', strtotime($w['datum'])) ?></td>
+                                <td><i class="bi bi-shop text-muted me-2"></i><?= htmlspecialchars($w['werkstatt']) ?></td>
+                                <td><?= htmlspecialchars($w['reparatur_typ']) ?></td>
+                                <td class="text-end pe-4 fw-bold"><?= number_format($w['kosten'], 2, ',', '.') ?> €</td>
+                            </tr>
+                        <?php endforeach; ?>
+
+                        <?php if (empty($wartungen)): ?>
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-5">
+                                    <i class="bi bi-wrench fs-2 text-light d-block mb-2"></i>
+                                    Keine historischen Service-Einträge vorhanden.
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <tr class="table-light border-top-2">
+                                <td colspan="3" class="text-end fw-bold text-uppercase text-muted" style="font-size: 0.85rem;">Gesamtkosten:</td>
+                                <td class="text-end pe-4 fw-bold fs-5 text-dark"><?= number_format($totalKosten, 2, ',', '.') ?> €</td>
+                            </tr>
+                        <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
         </div>
     </div>
 </div>

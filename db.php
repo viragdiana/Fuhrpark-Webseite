@@ -18,7 +18,6 @@ try {
     );
 ");
 
-    // Inside db.php
     $pdo->exec("
     CREATE TABLE IF NOT EXISTS fahrer (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,6 +26,18 @@ try {
         mitarbeiter_id TEXT NOT NULL,
         fuehrerscheinklassen TEXT NOT NULL,
         naechste_pruefung TEXT NOT NULL
+    );
+");
+
+    $pdo->exec("
+    CREATE TABLE IF NOT EXISTS wartung (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fahrzeug_id INTEGER NOT NULL,
+        datum TEXT NOT NULL,
+        werkstatt TEXT NOT NULL,
+        kosten REAL NOT NULL,
+        reparatur_typ TEXT NOT NULL,
+        FOREIGN KEY (fahrzeug_id) REFERENCES fahrzeuge(id)
     );
 ");
 

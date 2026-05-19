@@ -4,7 +4,6 @@ require 'db.php';
 $statusFilter = $_GET['status'] ?? '';
 
 if ($statusFilter && $statusFilter !== 'Alle') {
-
     $sql = "SELECT fahrzeuge.*, fahrer.vorname, fahrer.nachname 
             FROM fahrzeuge 
             LEFT JOIN fahrer ON fahrzeuge.fahrer_id = fahrer.id 
@@ -22,11 +21,11 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
-<html lang="ro">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Management Flotă - Dashboard</title>
+    <title>Fuhrparkmanagement - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -63,7 +62,7 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <option value="Alle" <?= $statusFilter == 'Alle' ? 'selected' : '' ?>>Alle Zustände</option>
                     <option value="Aktiv" <?= $statusFilter == 'Aktiv' ? 'selected' : '' ?>>Aktiv</option>
                     <option value="In Reparatur" <?= $statusFilter == 'In Reparatur' ? 'selected' : '' ?>>In Reparatur</option>
-                    <option value="Ausgemustert" <?= $statusFilter == 'Ausgemustert' ? 'selected' : '' ?>>Zurückgezogen</option>
+                    <option value="Ausgemustert" <?= $statusFilter == 'Ausgemustert' ? 'selected' : '' ?>>Ausgemustert</option>
                 </select>
             </form>
 
@@ -111,14 +110,13 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <?= htmlspecialchars($auto['vorname']) ?> <?= htmlspecialchars($auto['nachname']) ?>
                                     </span>
                             <?php else: ?>
-                                <span class="text-muted small"><em>Nicht signiert</em></span>
+                                <span class="text-muted small"><em>Nicht zugewiesen</em></span>
                             <?php endif; ?>
                         </td>
 
                         <td>
                             <?php
-                            // Map backend German to frontend Romanian UI badges
-                            $uiStatus = 'Unbekannt';
+                            // FIXED: Removed the UI string mapping and using the database value directly
                             $badgeClass = 'bg-secondary';
 
                             if ($auto['status'] == 'Aktiv') {
@@ -129,7 +127,7 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 $badgeClass = 'bg-danger-subtle text-danger border border-danger';
                             }
                             ?>
-                            <span class="badge rounded-pill px-2 py-1 <?= $badgeClass ?>"><?= $uiStatus ?></span>
+                            <span class="badge rounded-pill px-2 py-1 <?= $badgeClass ?>"><?= htmlspecialchars($auto['status']) ?></span>
                         </td>
                         <td class="text-end pe-4">
                             <a href="vehicle_details.php?id=<?= $auto['id'] ?>" class="btn btn-sm btn-light border text-primary" title="Details anzeigen">
