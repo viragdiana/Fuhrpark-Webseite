@@ -2,50 +2,53 @@
 $currentPage = basename($_SERVER['SCRIPT_NAME']);
 ?>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
-    <div class="container" style="max-width: 1300px;">
+<nav class="bg-card border-b border-border sticky top-0 z-50">
+    <div class="max-w-[1300px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex overflow-x-auto items-center h-16 gap-8 no-scrollbar">
 
-        <a class="navbar-brand fw-bold" href="<?= BASE_URL ?>index.php">
-            <i class="bi bi-car-front-fill me-2 text-primary"></i>Fuhrpark OS
-        </a>
+            <a href="<?= BASE_URL ?>index.php" class="flex items-center gap-2 text-lg font-bold text-foreground whitespace-nowrap pr-4">
+                <i class="bi bi-car-front-fill text-primary text-xl"></i>
+                Fuhrpark OS
+            </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+            <div class="flex items-center gap-6 h-full">
+                <a href="<?= BASE_URL ?>index.php"
+                   class="flex items-center gap-2 text-sm font-medium h-full border-b-2 transition-colors whitespace-nowrap <?= in_array($currentPage, ['index.php', 'vehicle_details.php', 'vehicle_form.php']) ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border' ?>">
+                    <i class="bi bi-car-front"></i> Fahrzeuge
+                </a>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto gap-2">
+                <a href="<?= BASE_URL ?>views/drivers/drivers_list.php"
+                   class="flex items-center gap-2 text-sm font-medium h-full border-b-2 transition-colors whitespace-nowrap <?= in_array($currentPage, ['drivers_list.php', 'driver_form.php', 'assign_driver.php']) ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border' ?>">
+                    <i class="bi bi-people"></i> Fahrer
+                </a>
 
-                <li class="nav-item">
-                    <a class="nav-link <?= in_array($currentPage, ['index.php', 'vehicle_details.php', 'vehicle_form.php']) ? 'active text-primary fw-bold' : '' ?>"
-                       href="<?= BASE_URL ?>index.php">
-                        <i class="bi bi-speedometer2 me-1"></i> Fahrzeuge
-                    </a>
-                </li>
+                <a href="#" class="flex items-center gap-2 text-sm font-medium h-full border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors whitespace-nowrap">
+                    <i class="bi bi-speedometer2"></i> Reifen
+                </a>
 
-                <li class="nav-item">
-                    <a class="nav-link <?= in_array($currentPage, ['drivers_list.php', 'driver_form.php', 'assign_driver.php']) ? 'active text-primary fw-bold' : '' ?>"
-                       href="<?= BASE_URL ?>views/drivers/drivers_list.php">
-                        <i class="bi bi-people me-1"></i> Fahrer
-                    </a>
-                </li>
+                <a href="#" class="flex items-center gap-2 text-sm font-medium h-full border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors whitespace-nowrap">
+                    <i class="bi bi-shield-check"></i> Versicherungen
+                </a>
 
-                <li class="nav-item">
-                    <a class="nav-link <?= in_array($currentPage, ['service_form.php']) ? 'active text-primary fw-bold' : '' ?>"
-                       href="#">
-                        <i class="bi bi-wrench-adjustable me-1"></i> Service
-                    </a>
-                </li>
-            </ul>
+                <a href="#" class="flex items-center gap-2 text-sm font-medium h-full border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors whitespace-nowrap">
+                    <i class="bi bi-globe-europe-africa"></i> Vignetten
+                </a>
 
-            <ul class="navbar-nav gap-3">
-                <li class="nav-item">
-                    <a class="nav-link" href="#"><i class="bi bi-gear"></i> Einstellungen</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-danger" href="#"><i class="bi bi-box-arrow-right"></i> Logout</a>
-                </li>
-            </ul>
+                <a href="#" class="flex items-center gap-2 text-sm font-medium h-full border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors whitespace-nowrap">
+                    <i class="bi bi-wrench"></i> Service
+                </a>
+            </div>
+
+            <div class="flex-grow"></div>
+
+            <a href="#" class="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap pl-4 border-l border-border">
+                <i class="bi bi-bell"></i> Warnungen
+            </a>
         </div>
     </div>
 </nav>
+
+<style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>

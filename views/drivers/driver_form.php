@@ -53,76 +53,106 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     header("Location: drivers_list.php");
     exit();
 }
+
+$inputClass = "w-full bg-background border border-border text-foreground text-sm rounded-md focus:ring-2 focus:ring-primary focus:border-primary block p-2.5 shadow-sm transition-shadow outline-none";
+$labelClass = "block text-sm font-medium text-foreground mb-1.5";
 ?>
 
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+
+    <style type="text/tailwindcss">
+        @theme inline {
+            --font-sans: 'Outfit', sans-serif;
+            --color-background: #F5F3F0;
+            --color-foreground: #3d3a35;
+            --color-card: #ffffff;
+            --color-primary: #968F83;
+            --color-primary-foreground: #ffffff;
+            --color-secondary: #A5A58D;
+            --color-muted: #E8E5DF;
+            --color-muted-foreground: #6b6761;
+            --color-destructive: #c75146;
+            --color-border: #d4cfc7;
+        }
+        @layer base {
+            body { @apply bg-background text-foreground font-sans antialiased; }
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
 <?php include '../../components/navbar.php'; ?>
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-dark text-white">
-                    <h4 class="mb-0"><?= $pageTitle ?></h4>
+<main class="max-w-3xl mx-auto px-4 py-8">
+
+    <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+        <div class="bg-muted/30 border-b border-border px-6 py-4">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i class="bi bi-person-badge text-primary"></i>
+                <?= $pageTitle ?>
+            </h1>
+        </div>
+
+        <form method="POST" action="driver_form.php" class="p-6">
+            <input type="hidden" name="id" value="<?= htmlspecialchars($id ?? '') ?>">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="<?= $labelClass ?>">Vorname <span class="text-destructive">*</span></label>
+                    <input type="text" name="vorname" class="<?= $inputClass ?>" value="<?= htmlspecialchars($vorname) ?>" required>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="driver_form.php">
-                        <input type="hidden" name="id" value="<?= htmlspecialchars($id ?? '') ?>">
+                <div>
+                    <label class="<?= $labelClass ?>">Nachname <span class="text-destructive">*</span></label>
+                    <input type="text" name="nachname" class="<?= $inputClass ?>" value="<?= htmlspecialchars($nachname) ?>" required>
+                </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Vorname *</label>
-                            <input type="text" name="vorname" class="form-control" value="<?= htmlspecialchars($vorname) ?>" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Nachname *</label>
-                            <input type="text" name="nachname" class="form-control" value="<?= htmlspecialchars($nachname) ?>" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Mitarbeiter ID *</label>
-                            <input type="text" name="mitarbeiter_id" class="form-control" value="<?= htmlspecialchars($mitarbeiter_id) ?>" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-primary">Nächste Führerscheinprüfung *</label>
-                            <input type="date" name="naechste_pruefung" class="form-control" value="<?= htmlspecialchars($naechste_pruefung) ?>" required>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label d-block fw-bold">Führerscheinklassen *</label>
-                            <div class="border rounded p-3 bg-white">
-                                <?php
-                                $klassen_options = ['AM', 'A1', 'A2', 'A', 'B', 'BE', 'C1', 'C1E', 'C', 'CE', 'D1', 'D1E', 'D', 'DE'];
-                                foreach ($klassen_options as $klasse):
-                                    $checked = in_array($klasse, $saved_klassen) ? 'checked' : '';
-                                    ?>
-                                    <div class="form-check form-check-inline" style="width: 80px;">
-                                        <input class="form-check-input" type="checkbox" name="klassen[]" value="<?= $klasse ?>" id="class_<?= $klasse ?>" <?= $checked ?>>
-                                        <label class="form-check-label" for="class_<?= $klasse ?>"><?= $klasse ?></label>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-between">
-                            <a href="drivers_list.php" class="btn btn-outline-secondary">Abbrechen</a>
-                            <button type="submit" class="btn btn-dark"><?= $id ? 'Änderungen speichern' : 'Profil anlegen' ?></button>
-                        </div>
-                    </form>
+                <div>
+                    <label class="<?= $labelClass ?>">Mitarbeiter ID <span class="text-destructive">*</span></label>
+                    <input type="text" name="mitarbeiter_id" class="<?= $inputClass ?> font-mono text-sm" value="<?= htmlspecialchars($mitarbeiter_id) ?>" required>
+                </div>
+                <div>
+                    <label class="<?= $labelClass ?> text-primary">Nächste Führerscheinprüfung <span class="text-destructive">*</span></label>
+                    <input type="date" name="naechste_pruefung" class="<?= $inputClass ?>" value="<?= htmlspecialchars($naechste_pruefung) ?>" required>
                 </div>
             </div>
-        </div>
+
+            <div class="mb-8 border-t border-border pt-6">
+                <label class="<?= $labelClass ?>">Führerscheinklassen <span class="text-destructive">*</span></label>
+                <div class="flex flex-wrap gap-4 mt-3 p-4 bg-muted/20 border border-border rounded-md">
+                    <?php
+                    $klassen_options = ['AM', 'A1', 'A2', 'A', 'B', 'BE', 'C1', 'C1E', 'C', 'CE', 'D1', 'D1E', 'D', 'DE'];
+                    foreach ($klassen_options as $klasse):
+                        $checked = in_array($klasse, $saved_klassen) ? 'checked' : '';
+                        ?>
+                        <label class="flex items-center gap-2 cursor-pointer w-16">
+                            <input type="checkbox" name="klassen[]" value="<?= $klasse ?>" class="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2" <?= $checked ?>>
+                            <span class="text-sm font-medium text-foreground"><?= $klasse ?></span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-6 border-t border-border">
+                <a href="drivers_list.php" class="px-4 py-2 text-sm font-medium border border-border rounded-md text-foreground hover:bg-muted transition-colors">
+                    Abbrechen
+                </a>
+                <button type="submit" class="px-6 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md shadow-sm hover:opacity-90 transition-opacity">
+                    <?= $id ? 'Änderungen speichern' : 'Profil anlegen' ?>
+                </button>
+            </div>
+        </form>
     </div>
-</div>
+
+</main>
 
 </body>
 </html>

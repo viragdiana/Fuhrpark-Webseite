@@ -378,7 +378,6 @@ $vignetten = $stmtVig->fetchAll(PDO::FETCH_ASSOC);
                     <?php else: ?>
                         <ul class="list-group list-group-flush mb-0 mt-2">
                             <?php foreach ($vignetten as $vig):
-                                // Check if expiring within 30 days or already expired
                                 $isExpiring = $vig['gueltig_bis'] < date('Y-m-d', strtotime('+30 days'));
                                 $isExpired = $vig['gueltig_bis'] < date('Y-m-d');
                                 ?>
