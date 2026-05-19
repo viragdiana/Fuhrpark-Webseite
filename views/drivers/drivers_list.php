@@ -1,5 +1,5 @@
 <?php
-require 'db.php';
+require '../../config/db.php';
 
 $stmt = $pdo->query("SELECT * FROM fahrer");
 $fahrer = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -21,7 +21,7 @@ $today = date('Y-m-d');
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mb-0">Fahrerverwaltung</h1>
         <div>
-            <a href="index.php" class="btn btn-outline-secondary me-2">Zurück zu Fahrzeugen</a>
+            <a href="../../index.php" class="btn btn-outline-secondary me-2">Zurück zu Fahrzeugen</a>
             <a href="driver_form.php" class="btn btn-dark">+ Neuen Fahrer anlegen</a>
         </div>
     </div>

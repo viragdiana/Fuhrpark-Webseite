@@ -1,5 +1,5 @@
 <?php
-require 'db.php';
+require '../../config/db.php';
 
 if (!isset($_GET['id'])) {
     header("Location: index.php");
@@ -27,7 +27,7 @@ if ($auto['status'] == 'Ausgemustert') $statusClass = 'bg-danger-subtle text-dan
 
 $sofer = "Neasignat";
 if (!empty($auto['vorname']) && !empty($auto['nachname'])) {
-    $sofer = htmlspecialchars($auto['vorname']) . " " . htmlspecialchars($auto['nachname']);
+    $sofer = htmlspecialchars($auto['vorname']) . " vehicle_details.php" . htmlspecialchars($auto['nachname']);
 }
 
 $stmtWartung = $pdo->prepare("SELECT * FROM wartung WHERE fahrzeug_id = ? ORDER BY datum DESC");
@@ -116,7 +116,7 @@ foreach ($wartungen as $w) {
 <div class="container py-4" style="max-width: 1200px;">
 
     <div class="d-flex align-items-center gap-3 mb-4">
-        <a href="index.php" class="back-arrow"><i class="bi bi-arrow-left"></i></a>
+        <a href="../../index.php" class="back-arrow"><i class="bi bi-arrow-left"></i></a>
         <h1 class="page-title mb-0"><?= htmlspecialchars($auto['marke']) ?> <?= htmlspecialchars($auto['modell']) ?></h1>
     </div>
 
@@ -138,14 +138,14 @@ foreach ($wartungen as $w) {
                         <?php if ($sofer === "Neasignat" || $sofer === "Nicht zugewiesen" || empty($auto['vorname'])): ?>
                             <div class="fs-1 text-light mb-2"><i class="bi bi-person-x"></i></div>
                             <p class="small text-muted mb-3">Kein aktiver Fahrer zugewiesen.</p>
-                            <a href="assign_driver.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-primary">
+                            <a href="../drivers/assign_driver.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-plus-lg me-1"></i> Fahrer zuweisen
                             </a>
                         <?php else: ?>
                             <div class="fs-1 text-primary mb-2"><i class="bi bi-person-check-fill"></i></div>
-                            <h4 class="fw-bold text-dark mb-0"><?= htmlspecialchars($auto['vorname']) . ' ' . htmlspecialchars($auto['nachname']) ?></h4>
+                            <h4 class="fw-bold text-dark mb-0"><?= htmlspecialchars($auto['vorname']) . ' vehicle_details.php' . htmlspecialchars($auto['nachname']) ?></h4>
                             <div class="mt-3">
-                                <a href="assign_driver.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary">
+                                <a href="../drivers/assign_driver.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-arrow-left-right me-1"></i> Fahrer wechseln
                                 </a>
                             </div>
@@ -262,7 +262,7 @@ foreach ($wartungen as $w) {
                 <h5 class="mb-0 text-dark fw-bold">
                     <i class="bi bi-journal-text me-2 text-primary"></i>Service- & Reparaturhistorie
                 </h5>
-                <a href="service_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-dark shadow-sm">
+                <a href="../service/service_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-dark shadow-sm">
                     <i class="bi bi-plus-lg me-1"></i> Wartung protokollieren
                 </a>
             </div>

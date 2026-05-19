@@ -1,5 +1,5 @@
 <?php
-require 'db.php';
+require 'config/db.php';
 
 $statusFilter = $_GET['status'] ?? '';
 
@@ -50,7 +50,7 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <div class="mb-4 pb-2 border-bottom d-flex gap-3">
         <a href="index.php" class="text-decoration-none fw-bold text-primary border-bottom border-primary border-2 pb-2">Fahrzeuge</a>
-        <a href="drivers_list.php" class="text-decoration-none text-secondary fw-medium pb-2">Fahrer</a>
+        <a href="views/drivers/drivers_list.php" class="text-decoration-none text-secondary fw-medium pb-2">Fahrer</a>
     </div>
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
@@ -66,7 +66,7 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </select>
             </form>
 
-            <a href="vehicle_form.php" class="btn btn-primary shadow-sm">
+            <a href="views/vehicles/vehicle_form.php" class="btn btn-primary shadow-sm">
                 <i class="bi bi-plus-lg me-1"></i> Fahrzeug hinzufügen
             </a>
         </div>
@@ -90,7 +90,7 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php foreach ($fahrzeuge as $auto): ?>
                     <tr>
                         <td class="ps-4 fw-bold">
-                            <a href="vehicle_details.php?id=<?= $auto['id'] ?>" class="text-decoration-none text-primary">
+                            <a href="views/vehicles/vehicle_details.php?id=<?= $auto['id'] ?>" class="text-decoration-none text-primary">
                                 <?= htmlspecialchars($auto['kennzeichen']) ?>
                             </a>
                         </td>
@@ -130,10 +130,10 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <span class="badge rounded-pill px-2 py-1 <?= $badgeClass ?>"><?= htmlspecialchars($auto['status']) ?></span>
                         </td>
                         <td class="text-end pe-4">
-                            <a href="vehicle_details.php?id=<?= $auto['id'] ?>" class="btn btn-sm btn-light border text-primary" title="Details anzeigen">
+                            <a href="views/vehicles/vehicle_details.php?id=<?= $auto['id'] ?>" class="btn btn-sm btn-light border text-primary" title="Details anzeigen">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            <a href="vehicle_form.php?id=<?= $auto['id'] ?>" class="btn btn-sm btn-light border text-secondary" title="Bearbeiten">
+                            <a href="views/vehicles/vehicle_form.php?id=<?= $auto['id'] ?>" class="btn btn-sm btn-light border text-secondary" title="Bearbeiten">
                                 <i class="bi bi-pencil"></i>
                             </a>
                         </td>

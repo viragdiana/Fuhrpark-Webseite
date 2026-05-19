@@ -1,5 +1,5 @@
 <?php
-$dbFile = __DIR__ . '/fuhrpark.db';
+$dbFile = __DIR__ . '/../database/fuhrpark.db';
 
 try {
     $pdo = new PDO('sqlite:' . $dbFile);

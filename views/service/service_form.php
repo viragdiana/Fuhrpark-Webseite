@@ -1,5 +1,5 @@
 <?php
-require 'db.php';
+require '../../config/db.php';
 
 $fahrzeug_id = $_GET['vehicle_id'] ?? null;
 
@@ -76,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
 
                         <div class="d-flex justify-content-between pt-2">
-                            <a href="vehicle_details.php?id=<?= $fahrzeug_id ?>" class="btn btn-outline-secondary">Abbrechen</a>
+                            <a href="../vehicles/vehicle_details.php?id=<?= $fahrzeug_id ?>" class="btn btn-outline-secondary">Abbrechen</a>
                             <button type="submit" class="btn btn-primary px-4">Eintrag speichern</button>
                         </div>
                     </form>

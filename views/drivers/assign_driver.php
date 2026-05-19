@@ -1,5 +1,5 @@
 <?php
-require 'db.php';
+require '../../config/db.php';
 
 $stmtVehicles = $pdo->query("SELECT id, kennzeichen, marke, modell FROM fahrzeuge WHERE status = 'Aktiv'");
 $activeVehicles = $stmtVehicles->fetchAll(PDO::FETCH_ASSOC);
@@ -70,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
 
                         <div class="d-flex justify-content-between pt-2">
-                            <a href="index.php" class="btn btn-outline-secondary">Abbrechen</a>
+                            <a href="../../index.php" class="btn btn-outline-secondary">Abbrechen</a>
                             <button type="submit" class="btn btn-primary px-4" <?= empty($activeVehicles) ? 'disabled' : '' ?>>Zuweisung speichern</button>
                         </div>
                     </form>
