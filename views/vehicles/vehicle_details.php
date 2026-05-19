@@ -113,6 +113,8 @@ foreach ($wartungen as $w) {
 </head>
 <body class="bg-light">
 
+<?php include '../../components/navbar.php'; ?>
+
 <div class="container py-4" style="max-width: 1200px;">
 
     <div class="d-flex align-items-center gap-3 mb-4">

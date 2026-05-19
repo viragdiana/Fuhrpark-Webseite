@@ -1,4 +1,5 @@
 <?php
+define('BASE_URL', '/Fuhrpark-Webseite/');
 $dbFile = __DIR__ . '/../database/fuhrpark.db';
 
 try {

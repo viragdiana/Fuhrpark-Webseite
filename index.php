@@ -46,6 +46,8 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body>
 
+<?php include 'components/navbar.php'; ?>
+
 <div class="container py-5" style="max-width: 1300px;">
 
     <div class="mb-4 pb-2 border-bottom d-flex gap-3">

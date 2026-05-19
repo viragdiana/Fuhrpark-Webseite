@@ -17,6 +17,8 @@ $today = date('Y-m-d');
 </head>
 <body class="bg-light">
 
+<?php include '../../components/navbar.php'; ?>
+
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mb-0">Fahrerverwaltung</h1>
