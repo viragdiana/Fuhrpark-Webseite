@@ -49,6 +49,8 @@ try {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         fahrzeug_id INTEGER NOT NULL,
         saison TEXT NOT NULL,
+        marke TEXT NOT NULL,
+        lagerort TEXT NOT NULL,
         profiltiefe REAL NOT NULL,
         FOREIGN KEY (fahrzeug_id) REFERENCES fahrzeuge(id)
     );

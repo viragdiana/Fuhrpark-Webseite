@@ -254,11 +254,11 @@ $reifenSaetze = $stmtReifen->fetchAll(PDO::FETCH_ASSOC);
                         <span class="fs-3 text-secondary"><i class="bi bi-record-circle"></i></span>
                         <div>
                             <div class="module-title">Reifenzustand</div>
-                            <div class="module-subtitle">Profiltiefe & Saison</div>
+                            <div class="module-subtitle">Verwaltung & Lagerung</div>
                         </div>
                     </div>
-                    <a href="tire_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Profiltiefe aktualisieren">
-                        <i class="bi bi-pencil"></i>
+                    <a href="tire_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Reifensatz verwalten">
+                        <i class="bi bi-plus-lg"></i> / <i class="bi bi-pencil"></i>
                     </a>
                 </div>
 
@@ -268,19 +268,23 @@ $reifenSaetze = $stmtReifen->fetchAll(PDO::FETCH_ASSOC);
                     <?php else: ?>
                         <ul class="list-group list-group-flush mb-0 mt-2">
                             <?php foreach ($reifenSaetze as $r):
-                                // ISSUE #12 CRITERIA: Check if depth is lower than 1.6mm
                                 $isLow = $r['profiltiefe'] < 1.6;
                                 ?>
-                                <li class="list-group-item px-0 d-flex justify-content-between align-items-center bg-transparent border-bottom-0 pb-1 pt-2">
-                                    <div class="text-secondary fw-medium">
-                                        <i class="bi <?= $r['saison'] == 'Winter' ? 'bi-snow' : ($r['saison'] == 'Sommer' ? 'bi-sun' : 'bi-cloud-sun') ?> me-2"></i>
-                                        <?= htmlspecialchars($r['saison']) ?>reifen
+                                <li class="list-group-item px-0 d-flex justify-content-between align-items-center bg-transparent border-bottom-0 pb-2 pt-2">
+                                    <div>
+                                        <div class="text-secondary fw-bold text-dark">
+                                            <i class="bi <?= $r['saison'] == 'Winter' ? 'bi-snow' : ($r['saison'] == 'Sommer' ? 'bi-sun' : 'bi-cloud-sun') ?> me-1 text-primary"></i>
+                                            <?= htmlspecialchars($r['saison']) ?> <span class="fw-normal text-muted">| <?= htmlspecialchars($r['marke']) ?></span>
+                                        </div>
+                                        <div class="small text-muted mt-1" style="font-size: 0.8rem;">
+                                            <i class="bi bi-geo-alt-fill me-1"></i><?= htmlspecialchars($r['lagerort']) ?>
+                                        </div>
                                     </div>
 
-                                    <div class="fw-bold fs-5 <?= $isLow ? 'text-danger' : 'text-dark' ?>">
+                                    <div class="fw-bold fs-5 text-end <?= $isLow ? 'text-danger' : 'text-dark' ?>">
                                         <?= number_format($r['profiltiefe'], 1, ',', '.') ?> mm
                                         <?php if ($isLow): ?>
-                                            <i class="bi bi-exclamation-triangle-fill text-danger ms-1" title="Kritische Profiltiefe! Gesetzliches Minimum (1,6 mm) unterschritten."></i>
+                                            <i class="bi bi-exclamation-triangle-fill text-danger ms-1" title="Kritische Profiltiefe!"></i>
                                         <?php endif; ?>
                                     </div>
                                 </li>
