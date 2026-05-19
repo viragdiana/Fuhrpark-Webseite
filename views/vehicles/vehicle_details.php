@@ -47,6 +47,10 @@ $stmtIns = $pdo->prepare("SELECT * FROM versicherung WHERE fahrzeug_id = ?");
 $stmtIns->execute([$id]);
 $versicherung = $stmtIns->fetch(PDO::FETCH_ASSOC);
 
+$stmtVig = $pdo->prepare("SELECT * FROM vignette WHERE fahrzeug_id = ? ORDER BY gueltig_bis ASC");
+$stmtVig->execute([$id]);
+$vignetten = $stmtVig->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 
 <!DOCTYPE html>
@@ -348,6 +352,60 @@ $versicherung = $stmtIns->fetch(PDO::FETCH_ASSOC);
                                 </div>
                             </div>
                         </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="module-card shadow-sm p-4 h-100 d-flex flex-column" style="border-left: 4px solid #10b981;">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex gap-3">
+                        <span class="fs-3 text-secondary"><i class="bi bi-globe-europe-africa"></i></span>
+                        <div>
+                            <div class="module-title">Maut & Vignetten</div>
+                            <div class="module-subtitle">Auslandzulassungen</div>
+                        </div>
+                    </div>
+                    <a href="vignette_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Vignette hinzufügen">
+                        <i class="bi bi-plus-lg"></i>
+                    </a>
+                </div>
+
+                <div class="mt-2 flex-grow-1">
+                    <?php if (empty($vignetten)): ?>
+                        <div class="text-muted small mt-3">Keine aktiven Vignetten hinterlegt.</div>
+                    <?php else: ?>
+                        <ul class="list-group list-group-flush mb-0 mt-2">
+                            <?php foreach ($vignetten as $vig):
+                                // Check if expiring within 30 days or already expired
+                                $isExpiring = $vig['gueltig_bis'] < date('Y-m-d', strtotime('+30 days'));
+                                $isExpired = $vig['gueltig_bis'] < date('Y-m-d');
+                                ?>
+                                <li class="list-group-item px-0 d-flex justify-content-between align-items-center bg-transparent border-bottom-0 pb-2 pt-2">
+                                    <div>
+                                        <div class="fw-bold text-dark">
+                                            <?= htmlspecialchars($vig['land']) ?> <span class="fw-normal text-muted">| <?= htmlspecialchars($vig['vignetten_typ']) ?></span>
+                                        </div>
+                                        <div class="small text-muted mt-1" style="font-size: 0.8rem;">
+                                            Von: <?= date('d.m.Y', strtotime($vig['gueltig_von'])) ?>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-end">
+                                        <div class="small text-muted" style="font-size: 0.75rem;">Ablaufdatum:</div>
+                                        <div class="fw-bold fs-6 <?= $isExpired ? 'text-danger' : ($isExpiring ? 'text-warning' : 'text-success') ?>">
+                                            <?= date('d.m.Y', strtotime($vig['gueltig_bis'])) ?>
+                                            <?php if ($isExpired): ?>
+                                                <i class="bi bi-x-circle-fill ms-1" title="Abgelaufen!"></i>
+                                            <?php elseif ($isExpiring): ?>
+                                                <i class="bi bi-exclamation-triangle-fill ms-1" title="Läuft in weniger als 30 Tagen ab!"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
                     <?php endif; ?>
                 </div>
             </div>

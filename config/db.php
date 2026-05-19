@@ -69,6 +69,18 @@ try {
     );
 ");
 
+    $pdo->exec("
+    CREATE TABLE IF NOT EXISTS vignette (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fahrzeug_id INTEGER NOT NULL,
+        land TEXT NOT NULL,
+        vignetten_typ TEXT NOT NULL,
+        gueltig_von TEXT NOT NULL,
+        gueltig_bis TEXT NOT NULL,
+        FOREIGN KEY (fahrzeug_id) REFERENCES fahrzeuge(id)
+    );
+");
+
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
 }

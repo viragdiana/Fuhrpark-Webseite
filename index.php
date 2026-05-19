@@ -5,13 +5,17 @@ $statusFilter = $_GET['status'] ?? 'Alle';
 $currentMonth = date('Y-m');
 
 if ($statusFilter === 'Warnungen') {
-    $sql = "SELECT fahrzeuge.*, fahrer.vorname, fahrer.nachname 
+    // FIXED: Added Vignette check for expiration within 30 days
+    $sql = "SELECT DISTINCT fahrzeuge.*, fahrer.vorname, fahrer.nachname 
             FROM fahrzeuge 
             LEFT JOIN fahrer ON fahrzeuge.fahrer_id = fahrer.id 
+            LEFT JOIN vignette ON fahrzeuge.id = vignette.fahrzeug_id
             WHERE substr(fahrzeuge.naechster_tuev, 1, 7) = :currMonth 
                OR substr(fahrzeuge.naechster_service, 1, 7) = :currMonth
                OR fahrzeuge.naechster_tuev < date('now')
-               OR fahrzeuge.naechster_service < date('now')";
+               OR fahrzeuge.naechster_service < date('now')
+               OR (vignette.gueltig_bis BETWEEN date('now') AND date('now', '+30 days'))
+               OR vignette.gueltig_bis < date('now')";
     $stmt = $pdo->prepare($sql);
     $stmt->execute(['currMonth' => $currentMonth]);
 
