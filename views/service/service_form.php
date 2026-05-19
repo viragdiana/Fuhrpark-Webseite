@@ -25,7 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$fahrzeug_id, $datum, $werkstatt, $kosten, $reparatur_typ]);
 
-    header("Location: vehicle_details.php?id=" . $fahrzeug_id);
+    header("Location: ../vehicles/vehicle_details.php?id=" . $fahrzeug_id);
     exit();
 }
 ?>

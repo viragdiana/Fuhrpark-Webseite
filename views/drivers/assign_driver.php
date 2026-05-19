@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$fahrer_id, $vehicle_id]);
 
-    header("Location: vehicle_details.php?id=" . $vehicle_id);
+    header("Location: ../vehicles/vehicle_details.php?id=" . $vehicle_id);
     exit();
 }
 ?>

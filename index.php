@@ -147,12 +147,18 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             ?>
                             <span class="badge rounded-pill px-2 py-1 <?= $badgeClass ?>"><?= htmlspecialchars($auto['status']) ?></span>
                         </td>
+
                         <td class="text-end pe-4">
                             <a href="views/vehicles/vehicle_details.php?id=<?= $auto['id'] ?>" class="btn btn-sm btn-light border text-primary" title="Details anzeigen">
                                 <i class="bi bi-eye"></i>
                             </a>
+
                             <a href="views/vehicles/vehicle_form.php?id=<?= $auto['id'] ?>" class="btn btn-sm btn-light border text-secondary" title="Bearbeiten">
                                 <i class="bi bi-pencil"></i>
+                            </a>
+
+                            <a href="views/vehicles/delete_vehicle.php?id=<?= $auto['id'] ?>" class="btn btn-sm btn-light border text-danger" title="Löschen" onclick="return confirm('Möchten Sie dieses Fahrzeug wirklich entfernen?');">
+                                <i class="bi bi-trash"></i>
                             </a>
                         </td>
                     </tr>

@@ -55,7 +55,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute([$kennzeichen, $fahrzeug_typ, $marke, $modell, $vin, $status, $naechster_tuev, $naechster_service]);
     }
 
-    header("Location: index.php");
+    // FIXED: Jump up two folders to the main dashboard
+    header("Location: ../../index.php");
     exit();
 }
 ?>
@@ -66,17 +67,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <title><?= $pageTitle ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body class="bg-light">
+
+<?php include '../../components/navbar.php'; ?>
 
 <div class="container mt-5 mb-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><?= $pageTitle ?></h4>
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0"><?= $pageTitle ?></h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <form method="POST" action="vehicle_form.php">
                         <input type="hidden" name="id" value="<?= htmlspecialchars($id ?? '') ?>">
 
@@ -132,9 +136,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <a href="index.php" class="btn btn-outline-secondary">Abbrechen</a>
-                            <button type="submit" class="btn btn-primary">
+                        <div class="d-flex justify-content-between pt-2">
+                            <a href="../../index.php" class="btn btn-outline-secondary">Abbrechen</a>
+                            <button type="submit" class="btn btn-primary px-4">
                                 <?= $id ? 'Änderungen speichern' : 'Fahrzeug anlegen' ?>
                             </button>
                         </div>
