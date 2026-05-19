@@ -56,6 +56,19 @@ try {
     );
 ");
 
+    $pdo->exec("
+    CREATE TABLE IF NOT EXISTS versicherung (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fahrzeug_id INTEGER NOT NULL UNIQUE, 
+        gesellschaft TEXT NOT NULL,
+        police_nr TEXT NOT NULL,
+        deckungsart TEXT NOT NULL,
+        ablaufdatum TEXT NOT NULL,
+        kuendigungsfrist TEXT NOT NULL,
+        FOREIGN KEY (fahrzeug_id) REFERENCES fahrzeuge(id)
+    );
+");
+
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
 }

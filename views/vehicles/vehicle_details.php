@@ -42,6 +42,11 @@ foreach ($wartungen as $w) {
 $stmtReifen = $pdo->prepare("SELECT * FROM reifen WHERE fahrzeug_id = ? ORDER BY saison DESC");
 $stmtReifen->execute([$id]);
 $reifenSaetze = $stmtReifen->fetchAll(PDO::FETCH_ASSOC);
+
+$stmtIns = $pdo->prepare("SELECT * FROM versicherung WHERE fahrzeug_id = ?");
+$stmtIns->execute([$id]);
+$versicherung = $stmtIns->fetch(PDO::FETCH_ASSOC);
+
 ?>
 
 <!DOCTYPE html>
@@ -299,16 +304,51 @@ $reifenSaetze = $stmtReifen->fetchAll(PDO::FETCH_ASSOC);
             <div class="module-card border-kfz shadow-sm p-4 h-100 d-flex flex-column">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div class="d-flex gap-3">
-                        <span class="fs-3 text-secondary"><i class="bi bi-file-earmark-medical"></i></span>
+                        <span class="fs-3 text-secondary"><i class="bi bi-shield-check"></i></span>
                         <div>
-                            <div class="module-title">Kfz-Haftpflichtversicherung</div>
-                            <div class="module-subtitle">Allianz</div>
+                            <div class="module-title">Kfz-Versicherung</div>
+                            <div class="module-subtitle">Deckung & Fristen</div>
                         </div>
                     </div>
+                    <a href="insurance_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Versicherung verwalten">
+                        <i class="bi bi-pencil"></i>
+                    </a>
                 </div>
-                <div class="mt-2">
-                    <div class="text-muted small">Versicherungspolice: RCA123456</div>
-                    <div class="text-muted small">Gültig bis: 20.05.2026</div>
+
+                <div class="mt-2 flex-grow-1">
+                    <?php if (!$versicherung): ?>
+                        <div class="text-muted small mt-3">
+                            <i class="bi bi-exclamation-circle text-danger me-1"></i> Keine Versicherungspolice hinterlegt.
+                        </div>
+                    <?php else:
+                        $isExpiring = $versicherung['ablaufdatum'] < date('Y-m-d', strtotime('+30 days'));
+                        $isDeadlineNear = $versicherung['kuendigungsfrist'] < date('Y-m-d', strtotime('+14 days')) && $versicherung['kuendigungsfrist'] >= date('Y-m-d');
+                        ?>
+                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2 mt-2">
+                            <span class="text-muted small">Gesellschaft:</span>
+                            <span class="fw-bold text-dark"><?= htmlspecialchars($versicherung['gesellschaft']) ?></span>
+                        </div>
+                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                            <span class="text-muted small">Police / Art:</span>
+                            <span class="fw-medium text-dark"><?= htmlspecialchars($versicherung['police_nr']) ?> (<?= htmlspecialchars($versicherung['deckungsart']) ?>)</span>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-6 border-end">
+                                <div class="text-muted small" style="font-size: 0.75rem;">Ablaufdatum:</div>
+                                <div class="fw-bold <?= $isExpiring ? 'text-danger' : 'text-dark' ?>">
+                                    <?= date('d.m.Y', strtotime($versicherung['ablaufdatum'])) ?>
+                                    <?= $isExpiring ? '<i class="bi bi-exclamation-triangle-fill ms-1" title="Läuft bald ab!"></i>' : '' ?>
+                                </div>
+                            </div>
+                            <div class="col-6 ps-3">
+                                <div class="text-muted small" style="font-size: 0.75rem;">Kündigungsfrist:</div>
+                                <div class="fw-bold <?= $isDeadlineNear ? 'text-warning' : 'text-dark' ?>">
+                                    <?= date('d.m.Y', strtotime($versicherung['kuendigungsfrist'])) ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
