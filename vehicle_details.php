@@ -8,7 +8,11 @@ if (!isset($_GET['id'])) {
 
 $id = $_GET['id'];
 
-$stmt = $pdo->prepare("SELECT * FROM fahrzeuge WHERE id = ?");
+$sql = "SELECT fahrzeuge.*, fahrer.vorname, fahrer.nachname 
+        FROM fahrzeuge 
+        LEFT JOIN fahrer ON fahrzeuge.fahrer_id = fahrer.id 
+        WHERE fahrzeuge.id = ?";
+$stmt = $pdo->prepare($sql);
 $stmt->execute([$id]);
 $auto = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -17,10 +21,16 @@ if (!$auto) {
 }
 
 $statusClass = 'bg-secondary';
-if ($auto['status'] == 'Aktiv') $statusClass = 'bg-success';
-if ($auto['status'] == 'In Reparatur') $statusClass = 'bg-warning text-dark';
-?>
+if ($auto['status'] == 'Aktiv') $statusClass = 'bg-success-subtle text-success border border-success';
+if ($auto['status'] == 'In Reparatur') $statusClass = 'bg-warning-subtle text-warning-emphasis border border-warning';
+if ($auto['status'] == 'Ausgemustert') $statusClass = 'bg-danger-subtle text-danger border border-danger';
 
+$sofer = "Neasignat";
+if (!empty($auto['vorname']) && !empty($auto['nachname'])) {
+    $sofer = htmlspecialchars($auto['vorname']) . " " . htmlspecialchars($auto['nachname']);
+}
+
+?>
 <!DOCTYPE html>
 <html lang="de">
 <head>
