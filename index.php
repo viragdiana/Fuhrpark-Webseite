@@ -60,10 +60,10 @@ $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="d-flex gap-3 align-items-center">
             <form method="GET" action="index.php" class="m-0">
                 <select name="status" class="form-select shadow-sm border-0" onchange="this.form.submit()">
-                    <option value="Toate" <?= $statusFilter == 'Toate' ? 'selected' : '' ?>>Alle Zustände</option>
-                    <option value="Activ" <?= $statusFilter == 'Activ' ? 'selected' : '' ?>>Aktiv</option>
-                    <option value="În Reparație" <?= $statusFilter == 'În Reparație' ? 'selected' : '' ?>>In Reparatur</option>
-                    <option value="Retras" <?= $statusFilter == 'Retras' ? 'selected' : '' ?>>Zurückgezogen</option>
+                    <option value="Alle" <?= $statusFilter == 'Alle' ? 'selected' : '' ?>>Alle Zustände</option>
+                    <option value="Aktiv" <?= $statusFilter == 'Aktiv' ? 'selected' : '' ?>>Aktiv</option>
+                    <option value="In Reparatur" <?= $statusFilter == 'In Reparatur' ? 'selected' : '' ?>>In Reparatur</option>
+                    <option value="Ausgemustert" <?= $statusFilter == 'Ausgemustert' ? 'selected' : '' ?>>Zurückgezogen</option>
                 </select>
             </form>
 

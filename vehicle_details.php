@@ -41,7 +41,7 @@ if (!empty($auto['vorname']) && !empty($auto['nachname'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f5f3f0
+            background-color: #f5f3f0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
         .back-arrow {
@@ -115,6 +115,36 @@ if (!empty($auto['vorname']) && !empty($auto['nachname'])) {
         <h2 class="section-title pb-3 mb-4">Fahrzeugdaten</h2>
 
         <div class="row g-4">
+            <div class="col-md-6">
+                <div class="module-card shadow-sm p-4 h-100 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex gap-3 align-items-center">
+                            <span class="fs-3 text-primary"><i class="bi bi-person-badge"></i></span>
+                            <div>
+                                <div class="module-title">Zugewiesener Fahrer</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-auto text-center py-3">
+                        <?php if ($sofer === "Neasignat" || $sofer === "Nicht zugewiesen" || empty($auto['vorname'])): ?>
+                            <div class="fs-1 text-light mb-2"><i class="bi bi-person-x"></i></div>
+                            <p class="small text-muted mb-3">Kein aktiver Fahrer zugewiesen.</p>
+                            <a href="assign_driver.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-plus-lg me-1"></i> Fahrer zuweisen
+                            </a>
+                        <?php else: ?>
+                            <div class="fs-1 text-primary mb-2"><i class="bi bi-person-check-fill"></i></div>
+                            <h4 class="fw-bold text-dark mb-0"><?= htmlspecialchars($auto['vorname']) . ' ' . htmlspecialchars($auto['nachname']) ?></h4>
+                            <div class="mt-3">
+                                <a href="assign_driver.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-arrow-left-right me-1"></i> Fahrer wechseln
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
             <div class="col-md-4">
                 <div class="meta-label">Kennzeichen</div>
                 <div class="meta-value text-uppercase fw-bold"><?= htmlspecialchars($auto['kennzeichen']) ?></div>
