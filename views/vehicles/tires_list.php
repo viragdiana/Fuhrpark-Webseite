@@ -20,10 +20,10 @@ foreach ($allTires as $tire) {
     }
 
     $groupedTires[$tire['fahrzeug_id']]['vehicle'] = [
-        'id' => $tire['fahrzeug_id'],
-        'marke' => $tire['auto_marke'],
-        'modell' => $tire['auto_modell'],
-        'kennzeichen' => $tire['kennzeichen']
+            'id' => $tire['fahrzeug_id'],
+            'marke' => $tire['auto_marke'],
+            'modell' => $tire['auto_modell'],
+            'kennzeichen' => $tire['kennzeichen']
     ];
     $groupedTires[$tire['fahrzeug_id']]['tires'][] = $tire;
 }
@@ -67,7 +67,7 @@ foreach ($allTires as $tire) {
 
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <h1 class="text-[28px] font-bold text-foreground">Reifensätze</h1>
-        <a href="tire_form.php" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:opacity-90 px-4 py-2.5 text-sm font-medium rounded-md shadow-sm transition-opacity">
+        <a href="select_vehicle.php?action=tire" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:opacity-90 px-4 py-2.5 text-sm font-medium rounded-md shadow-sm transition-opacity">
             <i class="bi bi-plus-lg"></i> Neuen Reifensatz anlegen
         </a>
     </div>
@@ -125,17 +125,24 @@ foreach ($allTires as $tire) {
                     </a>
                 </div>
 
-                <div class="p-6 space-y-4">
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <?php foreach ($group['tires'] as $tire):
                         // Determine status colors based on depth
-                        $depthColor = 'text-[#8a8270]'; // standard dark greenish brown
-                        if ($tire['profiltiefe'] < 1.6) $depthColor = 'text-destructive font-bold';
-                        elseif ($tire['profiltiefe'] <= 3.0) $depthColor = 'text-secondary-foreground font-bold';
+                        $depthColor = 'text-[#8a8270]';
+                        $iconClass = 'bi-check-circle-fill text-primary';
 
-                        // Determine badges matching Figma (Dark for mounted, light for storage)
+                        if ($tire['profiltiefe'] < 1.6) {
+                            $depthColor = 'text-destructive font-bold';
+                            $iconClass = 'bi-exclamation-triangle-fill text-destructive';
+                        } elseif ($tire['profiltiefe'] <= 3.0) {
+                            $depthColor = 'text-secondary-foreground font-bold';
+                            $iconClass = 'bi-exclamation-triangle-fill text-secondary-foreground';
+                        }
+
+                        // Determine badges (Dark for mounted, light for storage)
                         $isMounted = stripos($tire['lagerort'], 'montiert') !== false;
                         ?>
-                        <div class="bg-[#F5F3F0] border border-[#d4cfc7] rounded-xl p-5 relative group">
+                        <div class="bg-[#F5F3F0] border border-[#d4cfc7] rounded-xl p-5 relative group flex flex-col justify-between">
 
                             <div class="flex gap-2 mb-3">
                                 <?php if ($isMounted): ?>
@@ -153,34 +160,23 @@ foreach ($allTires as $tire) {
                                 <i class="bi bi-pencil"></i>
                             </a>
 
-                            <h3 class="text-[17px] font-bold text-foreground leading-tight">
-                                <?= htmlspecialchars($tire['marke']) ?>
-                            </h3>
-                            <div class="text-sm text-muted-foreground mb-5">
-                                Lagerort: <?= htmlspecialchars($tire['lagerort']) ?>
+                            <div>
+                                <h3 class="text-[17px] font-bold text-foreground leading-tight">
+                                    <?= htmlspecialchars($tire['marke']) ?>
+                                </h3>
+                                <div class="text-sm text-muted-foreground mt-1">
+                                    Lagerort: <?= htmlspecialchars($tire['lagerort']) ?>
+                                </div>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                            <div class="mt-5 pt-4 border-t border-[#d4cfc7]/70 flex items-end justify-between">
                                 <div>
-                                    <div class="text-muted-foreground text-xs mb-0.5">Montagedatum:</div>
-                                    <div class="font-medium text-foreground flex items-center gap-1.5">
-                                        <i class="bi bi-calendar3 text-muted-foreground"></i> -
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="text-muted-foreground text-xs mb-0.5">Laufleistung:</div>
-                                    <div class="font-medium text-foreground">- km</div>
-                                </div>
-                                <div>
-                                    <div class="text-muted-foreground text-xs mb-0.5">DOT-Nummer:</div>
-                                    <div class="font-medium text-foreground">-</div>
-                                </div>
-                                <div>
-                                    <div class="text-muted-foreground text-xs mb-0.5">Profiltiefe:</div>
-                                    <div class="font-bold <?= $depthColor ?> text-base">
+                                    <div class="text-muted-foreground text-xs mb-0.5 uppercase tracking-wide font-medium">Profiltiefe</div>
+                                    <div class="font-bold <?= $depthColor ?> text-xl">
                                         <?= number_format($tire['profiltiefe'], 1, ',', '.') ?> mm
                                     </div>
                                 </div>
+                                <i class="bi <?= $iconClass ?> text-2xl opacity-90" title="Reifenzustand"></i>
                             </div>
 
                         </div>

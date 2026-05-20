@@ -32,10 +32,28 @@ $stmtReifen->execute([$id]);
 $reifenSaetze = $stmtReifen->fetchAll(PDO::FETCH_ASSOC);
 
 $lowestTread = 8.0;
-foreach ($reifenSaetze as $r) {
-    if ($r['profiltiefe'] < $lowestTread) $lowestTread = $r['profiltiefe'];
+$tireHealth = 0;
+$tireBarColor = 'bg-muted-foreground';
+$tireTextColor = 'text-foreground';
+
+if (!empty($reifenSaetze)) {
+    foreach ($reifenSaetze as $r) {
+        if ($r['profiltiefe'] < $lowestTread) $lowestTread = $r['profiltiefe'];
+    }
+
+    $tireHealth = max(0, min(100, round(($lowestTread / 8.0) * 100)));
+
+    if ($lowestTread < 1.6) {
+        $tireBarColor = 'bg-destructive';
+        $tireTextColor = 'text-destructive';
+    } elseif ($lowestTread <= 3.0) {
+        $tireBarColor = 'bg-[#f59e0b]';
+        $tireTextColor = 'text-[#f59e0b]';
+    } else {
+        $tireBarColor = 'bg-primary';
+        $tireTextColor = 'text-foreground';
+    }
 }
-$tireHealth = max(0, min(100, round(($lowestTread / 8.0) * 100)));
 
 $stmtIns = $pdo->prepare("SELECT * FROM versicherung WHERE fahrzeug_id = ?");
 $stmtIns->execute([$id]);
@@ -206,11 +224,16 @@ $insDays = $versicherung ? getDaysRemaining($versicherung['ablaufdatum']) : null
             <div class="mt-auto">
                 <div class="flex justify-between items-end mb-2">
                     <div class="text-xs text-muted-foreground">Verbleibende Kapazität:</div>
-                    <div class="font-bold text-foreground text-xl"><?= $tireHealth ?>%</div>
+                    <div class="font-bold text-xl <?= $tireTextColor ?>"><?= empty($reifenSaetze) ? '-' : $tireHealth ?>%</div>
                 </div>
-                <div class="w-full bg-muted rounded-full h-2.5">
-                    <div class="bg-primary h-2.5 rounded-full" style="width: <?= $tireHealth ?>%"></div>
+                <div class="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+                    <div class="<?= $tireBarColor ?> h-2.5 rounded-full transition-all duration-500 ease-in-out" style="width: <?= $tireHealth ?>%"></div>
                 </div>
+                <?php if (empty($reifenSaetze)): ?>
+                    <p class="text-xs text-muted-foreground mt-2 italic">Noch keine Reifensätze angelegt.</p>
+                <?php elseif ($lowestTread < 1.6): ?>
+                    <p class="text-xs text-destructive font-bold mt-2">Kritische Profiltiefe erreicht!</p>
+                <?php endif; ?>
             </div>
         </div>
 
