@@ -39,7 +39,7 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
                     ? 'border-primary text-foreground'
                     : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border';
             ?>
-            <a href="<?= BASE_URL ?>warnings_list.php" class="flex items-center gap-2 h-full border-b-2 text-sm font-medium transition-colors whitespace-nowrap px-4 border-l border-border <?= $isWarningsActive ?>">
+            <a href="<?= BASE_URL ?>views/vehicles/warnings_list.php" class="flex items-center gap-2 h-full border-b-2 text-sm font-medium transition-colors whitespace-nowrap px-4 border-l border-border <?= $isWarningsActive ?>">
                 <i class="bi bi-bell"></i> Warnungen
             </a>
 
