@@ -72,7 +72,7 @@ $today = date('Y-m-d');
                     <a href="driver_form.php?id=<?= $person['id'] ?>" class="text-muted-foreground hover:text-primary p-2 rounded-md transition-colors" title="Bearbeiten">
                         <i class="bi bi-pencil"></i>
                     </a>
-                    <a href="#" class="text-muted-foreground hover:text-destructive hover:bg-destructive/10 p-2 rounded-md transition-colors" title="Löschen" onclick="return confirm('Möchten Sie diesen Fahrer wirklich entfernen?');">
+                    <a href="delete_driver.php?id=<?= $person['id'] ?>" class="text-muted-foreground hover:text-destructive hover:bg-destructive/10 p-2 rounded-md transition-colors" title="Löschen" onclick="return confirm('Möchten Sie diesen Fahrer wirklich entfernen?');">
                         <i class="bi bi-trash"></i>
                     </a>
                 </div>
@@ -110,14 +110,22 @@ $today = date('Y-m-d');
                         <i class="bi bi-car-front"></i> Zugewiesenes Fahrzeug:
                     </div>
                     <?php if ($person['vehicle_id']): ?>
-                        <a href="../vehicles/vehicle_details.php?id=<?= $person['vehicle_id'] ?>" class="block hover:bg-muted/30 -mx-2 px-2 py-1 rounded transition-colors">
-                            <div class="font-bold text-foreground text-sm">
-                                <?= htmlspecialchars($person['marke']) ?> <?= htmlspecialchars($person['modell']) ?>
-                            </div>
-                            <div class="text-xs text-muted-foreground uppercase mt-0.5 tracking-wide">
-                                <?= htmlspecialchars($person['kennzeichen']) ?>
-                            </div>
-                        </a>
+                        <div class="group relative">
+                            <a href="../vehicles/vehicle_details.php?id=<?= $person['vehicle_id'] ?>" class="block hover:bg-muted/30 -mx-2 px-2 py-1 rounded transition-colors">
+                                <div class="font-bold text-foreground text-sm">
+                                    <?= htmlspecialchars($person['marke']) ?> <?= htmlspecialchars($person['modell']) ?>
+                                </div>
+                                <div class="text-xs text-muted-foreground uppercase mt-0.5 tracking-wide">
+                                    <?= htmlspecialchars($person['kennzeichen']) ?>
+                                </div>
+                            </a>
+                            <a href="unassign_driver.php?vehicle_id=<?= $person['vehicle_id'] ?>&return_to=drivers"
+                               class="absolute top-1/2 -translate-y-1/2 right-0 text-destructive hover:bg-destructive/10 p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                               title="Zuweisung aufheben"
+                               onclick="return confirm('Zuweisung wirklich aufheben?');">
+                                <i class="bi bi-person-x"></i>
+                            </a>
+                        </div>
                     <?php else: ?>
                         <div class="font-medium text-foreground text-sm italic">Keines</div>
                         <a href="assign_driver.php?fahrer_id=<?= $person['id'] ?>" class="text-xs text-primary hover:underline mt-0.5 inline-block">Jetzt zuweisen</a>

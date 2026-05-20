@@ -3,16 +3,16 @@ require '../../config/db.php';
 
 $today = time();
 $alerts = [
-    'critical' => [],
-    'warning' => [],
-    'info' => []
+        'critical' => [],
+        'warning' => [],
+        'info' => []
 ];
 
 function formatVehicle($v) {
     return htmlspecialchars($v['marke'] . ' ' . $v['modell']) . ' (' . htmlspecialchars($v['kennzeichen']) . ')';
 }
 
-$vehicles = $pdo->query("SELECT id, marke, modell, kennzeichen, naechster_tuev, naechster_service FROM fahrzeuge")->fetchAll(PDO::FETCH_ASSOC);
+$vehicles = $pdo->query("SELECT id, marke, modell, kennzeichen, naechster_tuev, naechster_service FROM fahrzeuge WHERE status != 'Ausgemustert'")->fetchAll(PDO::FETCH_ASSOC);
 foreach ($vehicles as $v) {
     $vehName = formatVehicle($v);
 
@@ -37,7 +37,7 @@ foreach ($vehicles as $v) {
     }
 }
 
-$insurances = $pdo->query("SELECT v.ablaufdatum, v.deckungsart, f.id, f.marke, f.modell, f.kennzeichen FROM versicherung v JOIN fahrzeuge f ON v.fahrzeug_id = f.id")->fetchAll(PDO::FETCH_ASSOC);
+$insurances = $pdo->query("SELECT v.ablaufdatum, v.deckungsart, f.id, f.marke, f.modell, f.kennzeichen FROM versicherung v JOIN fahrzeuge f ON v.fahrzeug_id = f.id WHERE f.status != 'Ausgemustert'")->fetchAll(PDO::FETCH_ASSOC);
 foreach ($insurances as $ins) {
     if (empty($ins['ablaufdatum'])) continue;
     $ts = strtotime($ins['ablaufdatum']);
@@ -56,7 +56,7 @@ foreach ($insurances as $ins) {
     }
 }
 
-$vignettes = $pdo->query("SELECT v.gueltig_bis, v.land, f.id, f.marke, f.modell, f.kennzeichen FROM vignette v JOIN fahrzeuge f ON v.fahrzeug_id = f.id")->fetchAll(PDO::FETCH_ASSOC);
+$vignettes = $pdo->query("SELECT v.gueltig_bis, v.land, f.id, f.marke, f.modell, f.kennzeichen FROM vignette v JOIN fahrzeuge f ON v.fahrzeug_id = f.id WHERE f.status != 'Ausgemustert'")->fetchAll(PDO::FETCH_ASSOC);
 foreach ($vignettes as $vig) {
     if (empty($vig['gueltig_bis'])) continue;
     $ts = strtotime($vig['gueltig_bis']);
@@ -72,7 +72,7 @@ foreach ($vignettes as $vig) {
     }
 }
 
-$tires = $pdo->query("SELECT r.profiltiefe, r.saison, f.id, f.marke, f.modell, f.kennzeichen FROM reifen r JOIN fahrzeuge f ON r.fahrzeug_id = f.id")->fetchAll(PDO::FETCH_ASSOC);
+$tires = $pdo->query("SELECT r.profiltiefe, r.saison, f.id, f.marke, f.modell, f.kennzeichen FROM reifen r JOIN fahrzeuge f ON r.fahrzeug_id = f.id WHERE f.status != 'Ausgemustert'")->fetchAll(PDO::FETCH_ASSOC);
 foreach ($tires as $tire) {
     $item = ['category' => 'Reifen', 'vehicle' => formatVehicle($tire), 'vid' => $tire['id'], 'date' => date('d.m.Y')];
     if ($tire['profiltiefe'] < 1.6) {
@@ -130,8 +130,7 @@ $totalAlerts = $countCrit + $countWarn + $countInfo;
         <h1 class="text-[28px] font-bold text-foreground">Warnzentrum</h1>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
         <div class="bg-card rounded-xl p-5 shadow-sm border border-border flex items-center gap-4">
             <div class="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-xl">
                 <i class="bi bi-exclamation-circle"></i>
@@ -162,16 +161,6 @@ $totalAlerts = $countCrit + $countWarn + $countInfo;
             </div>
         </div>
 
-        <div class="bg-card rounded-xl p-5 shadow-sm border border-border flex items-center gap-4">
-            <div class="w-12 h-12 rounded-lg bg-[#E8E5DF] flex items-center justify-center text-[#6b6761] text-xl border border-[#d4cfc7]">
-                <i class="bi bi-info-circle"></i>
-            </div>
-            <div>
-                <div class="text-sm text-muted-foreground font-medium tracking-wider mb-0.5">Informativ</div>
-                <div class="text-2xl font-bold text-foreground"><?= $countInfo ?></div>
-            </div>
-        </div>
-
     </div>
 
     <?php if ($countCrit > 0): ?>
@@ -186,8 +175,7 @@ $totalAlerts = $countCrit + $countWarn + $countInfo;
                         <div class="flex items-start gap-3">
                             <i class="bi bi-exclamation-circle text-destructive mt-0.5"></i>
                             <div>
-                                <a href="views/vehicles/vehicle_details.php?id=<?= $alert['vid'] ?>" class="font-bold text-foreground hover:text-primary transition-colors flex items-center gap-2">
-                                    <i class="bi bi-car-front text-muted-foreground"></i> <?= $alert['vehicle'] ?>
+                                <a href="vehicle_details.php?id=<?= $alert['vid'] ?>" class="font-bold text-foreground hover:text-primary transition-colors flex items-center gap-2">                                    <i class="bi bi-car-front text-muted-foreground"></i> <?= $alert['vehicle'] ?>
                                 </a>
                                 <div class="text-sm font-medium text-foreground mt-1"><?= $alert['message'] ?></div>
                                 <div class="text-xs text-muted-foreground mt-1 flex items-center gap-1">
@@ -216,7 +204,7 @@ $totalAlerts = $countCrit + $countWarn + $countInfo;
                         <div class="flex items-start gap-3">
                             <i class="bi bi-exclamation-triangle text-secondary-foreground mt-0.5"></i>
                             <div>
-                                <a href="views/vehicles/vehicle_details.php?id=<?= $alert['vid'] ?>" class="font-bold text-foreground hover:text-primary transition-colors flex items-center gap-2">
+                                <a href="vehicle_details.php?id=<?= $alert['vid'] ?>" class="font-bold text-foreground hover:text-primary transition-colors flex items-center gap-2">
                                     <i class="bi bi-car-front text-muted-foreground"></i> <?= $alert['vehicle'] ?>
                                 </a>
                                 <div class="text-sm font-medium text-foreground mt-1"><?= $alert['message'] ?></div>

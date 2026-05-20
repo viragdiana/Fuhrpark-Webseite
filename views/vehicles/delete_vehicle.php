@@ -1,25 +1,15 @@
 <?php
 require '../../config/db.php';
 
-if (!isset($_GET['id'])) {
-    header("Location: ../../index.php");
-    exit();
-}
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
 
-$id = $_GET['id'];
+    $pdo->prepare("DELETE FROM wartung WHERE fahrzeug_id = ?")->execute([$id]);
+    $pdo->prepare("DELETE FROM reifen WHERE fahrzeug_id = ?")->execute([$id]);
+    $pdo->prepare("DELETE FROM versicherung WHERE fahrzeug_id = ?")->execute([$id]);
+    $pdo->prepare("DELETE FROM vignette WHERE fahrzeug_id = ?")->execute([$id]);
 
-$stmt = $pdo->prepare("SELECT fahrer_id FROM fahrzeuge WHERE id = ?");
-$stmt->execute([$id]);
-$vehicle = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if ($vehicle) {
-    if (!empty($vehicle['fahrer_id'])) {
-        $updateStmt = $pdo->prepare("UPDATE fahrzeuge SET status = 'Ausgemustert' WHERE id = ?");
-        $updateStmt->execute([$id]);
-    } else {
-        $deleteStmt = $pdo->prepare("DELETE FROM fahrzeuge WHERE id = ?");
-        $deleteStmt->execute([$id]);
-    }
+    $pdo->prepare("DELETE FROM fahrzeuge WHERE id = ?")->execute([$id]);
 }
 
 header("Location: ../../index.php");

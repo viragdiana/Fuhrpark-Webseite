@@ -90,10 +90,10 @@ $labelClass = "block text-sm font-medium text-foreground mb-1.5";
                 </div>
                 <div>
                     <label class="<?= $labelClass ?>">Vignetten-Typ <span class="text-destructive">*</span></label>
-                    <select name="vignetten_typ" class="<?= $inputClass ?> cursor-pointer" required>
-                        <option value="Jahresvignette">Jahresvignette</option>
-                        <option value="Monatsvignette">Monatsvignette</option>
+                    <select name="vignetten_typ" id="vignetten_typ" class="<?= $inputClass ?> cursor-pointer" required>
                         <option value="10-Tages-Vignette">10-Tages-Vignette</option>
+                        <option value="Monatsvignette">Monatsvignette</option>
+                        <option value="Jahresvignette">Jahresvignette</option>
                         <option value="Streckenmaut">Sondermaut / Streckenmaut</option>
                     </select>
                 </div>
@@ -102,11 +102,12 @@ $labelClass = "block text-sm font-medium text-foreground mb-1.5";
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 border-t border-border pt-6">
                 <div>
                     <label class="<?= $labelClass ?>">Gültig von <span class="text-destructive">*</span></label>
-                    <input type="date" name="gueltig_von" class="<?= $inputClass ?>" required>
+                    <input type="date" name="gueltig_von" id="gueltig_von" class="<?= $inputClass ?>" required>
                 </div>
                 <div>
                     <label class="<?= $labelClass ?>">Gültig bis <span class="text-destructive">*</span></label>
-                    <input type="date" name="gueltig_bis" class="<?= $inputClass ?>" required>
+                    <input type="date" name="gueltig_bis" id="gueltig_bis" class="<?= $inputClass ?>" required>
+                    <p class="text-xs text-muted-foreground mt-2"><i class="bi bi-magic mr-1"></i>Wird automatisch berechnet</p>
                 </div>
             </div>
 
@@ -122,6 +123,44 @@ $labelClass = "block text-sm font-medium text-foreground mb-1.5";
     </div>
 
 </main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeSelect = document.getElementById('vignetten_typ');
+        const startDateInput = document.getElementById('gueltig_von');
+        const endDateInput = document.getElementById('gueltig_bis');
+
+        if (!startDateInput.value) {
+            startDateInput.value = new Date().toISOString().split('T')[0];
+        }
+
+        function calculateEndDate() {
+            if (!startDateInput.value) return;
+
+            let startDate = new Date(startDateInput.value);
+            let endDate = new Date(startDate);
+            let type = typeSelect.value;
+
+            if (type === '10-Tages-Vignette') {
+                endDate.setDate(endDate.getDate() + 9);
+            } else if (type === 'Monatsvignette') {
+                endDate.setMonth(endDate.getMonth() + 1);
+            } else if (type === 'Jahresvignette') {
+                endDate.setFullYear(endDate.getFullYear() + 1);
+                endDate.setDate(endDate.getDate() - 1);
+            } else {
+                return;
+            }
+
+            endDateInput.value = endDate.toISOString().split('T')[0];
+        }
+
+        typeSelect.addEventListener('change', calculateEndDate);
+        startDateInput.addEventListener('change', calculateEndDate);
+
+        calculateEndDate();
+    });
+</script>
 
 </body>
 </html>

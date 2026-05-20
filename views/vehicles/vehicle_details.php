@@ -142,11 +142,22 @@ $insDays = $versicherung ? getDaysRemaining($versicherung['ablaufdatum']) : null
                         <span>Zugewiesener Fahrer</span>
                         <a href="../drivers/assign_driver.php?vehicle_id=<?= $auto['id'] ?>" class="text-primary hover:underline"><i class="bi bi-pencil"></i></a>
                     </div>
-                    <div class="font-medium text-foreground text-base flex items-center gap-2">
-                        <?php if ($sofer === "Nicht zugewiesen"): ?>
-                            <i class="bi bi-person-x text-muted-foreground"></i> <span class="text-muted-foreground italic">Nicht zugewiesen</span>
-                        <?php else: ?>
-                            <i class="bi bi-person-check text-primary"></i> <?= $sofer ?>
+                    <div class="font-medium text-foreground text-base flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <?php if ($sofer === "Nicht zugewiesen"): ?>
+                                <i class="bi bi-person-x text-muted-foreground"></i> <span class="text-muted-foreground italic">Nicht zugewiesen</span>
+                            <?php else: ?>
+                                <i class="bi bi-person-check text-primary"></i> <?= $sofer ?>
+                            <?php endif; ?>
+                        </div>
+
+                        <?php if ($sofer !== "Nicht zugewiesen"): ?>
+                            <a href="../drivers/unassign_driver.php?vehicle_id=<?= $auto['id'] ?>"
+                               class="text-destructive hover:bg-destructive/10 p-1.5 rounded transition-colors"
+                               title="Fahrer entkoppeln"
+                               onclick="return confirm('Möchten Sie den Fahrer wirklich von diesem Fahrzeug entkoppeln?');">
+                                <i class="bi bi-person-x"></i>
+                            </a>
                         <?php endif; ?>
                     </div>
                 </div>

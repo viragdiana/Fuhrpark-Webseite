@@ -18,16 +18,20 @@ $sqlNoVig = "SELECT id, marke, modell, kennzeichen
 $noVigVehicles = $pdo->query($sqlNoVig)->fetchAll(PDO::FETCH_ASSOC);
 
 $activeCount = 0;
-$expiringCount = 0;
+$expiredCount = 0;
+$expiringSoonCount = 0;
 $noVigCount = count($noVigVehicles);
 
 foreach ($vignetten as $vig) {
     $bisTs = strtotime($vig['gueltig_bis']);
-    if ($bisTs >= $today) {
+
+    if ($bisTs < $today) {
+        $expiredCount++;
+    } else {
         $activeCount++;
-    }
-    if ($bisTs >= $today && $bisTs <= $warningLimit) {
-        $expiringCount++;
+        if ($bisTs <= $warningLimit) {
+            $expiringSoonCount++;
+        }
     }
 }
 ?>
@@ -75,10 +79,10 @@ foreach ($vignetten as $vig) {
         </a>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
 
         <div class="bg-card rounded-xl p-6 shadow-sm border border-border flex items-center gap-5">
-            <div class="w-14 h-14 rounded-xl bg-muted flex items-center justify-center text-muted-foreground text-2xl">
+            <div class="w-14 h-14 rounded-xl bg-muted flex items-center justify-center text-muted-foreground text-2xl shrink-0">
                 <i class="bi bi-ticket-perforated"></i>
             </div>
             <div>
@@ -88,21 +92,31 @@ foreach ($vignetten as $vig) {
         </div>
 
         <div class="bg-card rounded-xl p-6 shadow-sm border border-border flex items-center gap-5">
-            <div class="w-14 h-14 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive text-2xl">
-                <i class="bi bi-exclamation-circle"></i>
+            <div class="w-14 h-14 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive text-2xl shrink-0">
+                <i class="bi bi-exclamation-octagon"></i>
             </div>
             <div>
-                <div class="text-sm text-muted-foreground font-medium">Läuft bald ab (< 30 Tage)</div>
-                <div class="text-3xl font-bold text-foreground"><?= $expiringCount ?></div>
+                <div class="text-sm text-destructive font-medium">Abgelaufen</div>
+                <div class="text-3xl font-bold text-destructive"><?= $expiredCount ?></div>
             </div>
         </div>
 
         <div class="bg-card rounded-xl p-6 shadow-sm border border-border flex items-center gap-5">
-            <div class="w-14 h-14 rounded-xl bg-[#E8E5DF] flex items-center justify-center text-[#6b6761] text-2xl border border-[#d4cfc7]">
+            <div class="w-14 h-14 rounded-xl bg-[#f59e0b]/10 flex items-center justify-center text-[#f59e0b] text-2xl shrink-0">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div>
+                <div class="text-sm text-muted-foreground font-medium">Läuft bald ab (< 30T)</div>
+                <div class="text-3xl font-bold text-foreground"><?= $expiringSoonCount ?></div>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-xl p-6 shadow-sm border border-border flex items-center gap-5">
+            <div class="w-14 h-14 rounded-xl bg-[#E8E5DF] flex items-center justify-center text-[#6b6761] text-2xl border border-[#d4cfc7] shrink-0">
                 <i class="bi bi-geo-alt"></i>
             </div>
             <div>
-                <div class="text-sm text-muted-foreground font-medium">Fahrzeuge ohne Vignette</div>
+                <div class="text-sm text-muted-foreground font-medium">Ohne gültige Vignette</div>
                 <div class="text-3xl font-bold text-foreground"><?= $noVigCount ?></div>
             </div>
         </div>
@@ -110,11 +124,9 @@ foreach ($vignetten as $vig) {
     </div>
 
     <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden mb-8">
-
         <div class="px-6 py-5 border-b border-border">
-            <h2 class="text-xl font-bold text-foreground">Alle Vignetten</h2>
+            <h2 class="text-xl font-bold text-foreground">Alle Vignetten-Historie</h2>
         </div>
-
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left whitespace-nowrap">
                 <thead class="text-xs text-muted-foreground uppercase bg-background/50 border-b border-border tracking-wider">
@@ -132,7 +144,7 @@ foreach ($vignetten as $vig) {
                     $daysDiff = ceil(($bisTs - $today) / 86400);
 
                     $statusColor = 'text-primary';
-                    $statusIcon = '';
+                    $statusIcon = 'bi-check-circle';
                     $statusText = 'Aktiv';
                     $dateColor = 'text-muted-foreground';
 
@@ -142,23 +154,21 @@ foreach ($vignetten as $vig) {
                         $statusText = 'Abgelaufen';
                         $dateColor = 'text-destructive font-medium';
                     } elseif ($daysDiff <= 30) {
-                        $statusColor = 'text-[#c75146]';
+                        $statusColor = 'text-[#f59e0b]';
                         $statusIcon = 'bi-exclamation-triangle';
                         $statusText = 'Achtung';
-                        $dateColor = 'text-[#c75146] font-medium';
+                        $dateColor = 'text-[#f59e0b] font-medium';
                     }
                     ?>
                     <tr class="hover:bg-muted/30 transition-colors">
-
                         <td class="px-6 py-5">
-                            <a href="../vehicles/vehicle_details.php?id=<?= $vig['fahrzeug_id'] ?>" class="font-bold text-foreground hover:text-primary transition-colors block">
+                            <a href="vehicle_details.php?id=<?= $vig['fahrzeug_id'] ?>" class="font-bold text-foreground hover:text-primary transition-colors block">
                                 <?= htmlspecialchars($vig['marke']) ?> <?= htmlspecialchars($vig['modell']) ?>
                             </a>
                             <div class="text-xs text-muted-foreground uppercase mt-0.5 tracking-wide">
                                 <?= htmlspecialchars($vig['kennzeichen']) ?>
                             </div>
                         </td>
-
                         <td class="px-6 py-5">
                             <div class="text-foreground flex items-center gap-2 font-medium">
                                 <i class="bi bi-geo-alt text-muted-foreground"></i>
@@ -168,7 +178,6 @@ foreach ($vignetten as $vig) {
                                 <?= htmlspecialchars($vig['vignetten_typ']) ?>
                             </div>
                         </td>
-
                         <td class="px-6 py-5">
                             <div class="text-foreground font-medium">
                                 <?= date('d.m.Y', strtotime($vig['gueltig_von'])) ?> - <?= date('d.m.Y', $bisTs) ?>
@@ -178,23 +187,11 @@ foreach ($vignetten as $vig) {
                                 <?= $isExpired ? 'Gültigkeit abgelaufen' : $daysDiff . ' Tage verbleibend' ?>
                             </div>
                         </td>
-
                         <td class="px-6 py-5 text-right font-medium <?= $statusColor ?>">
-                            <?php if ($statusIcon): ?><i class="bi <?= $statusIcon ?> mr-1"></i><?php endif; ?>
-                            <?= $statusText ?>
+                            <i class="bi <?= $statusIcon ?> mr-1"></i> <?= $statusText ?>
                         </td>
-
                     </tr>
                 <?php endforeach; ?>
-
-                <?php if (empty($vignetten)): ?>
-                    <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-muted-foreground">
-                            <i class="bi bi-globe-europe-africa text-4xl mb-3 block text-border"></i>
-                            Es wurden keine Vignetten im System gefunden.
-                        </td>
-                    </tr>
-                <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -212,7 +209,6 @@ foreach ($vignetten as $vig) {
             <?php else: ?>
                 <?php foreach ($noVigVehicles as $uv): ?>
                     <div class="bg-muted/30 border border-border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors hover:shadow-sm">
-
                         <div class="flex items-center gap-4">
                             <i class="bi bi-exclamation-triangle text-2xl text-muted-foreground"></i>
                             <div>
@@ -224,18 +220,14 @@ foreach ($vignetten as $vig) {
                                 </div>
                             </div>
                         </div>
-
-                        <a href="../vehicles/vignette_form.php?vehicle_id=<?= $uv['id'] ?>" class="flex items-center gap-2 text-sm font-medium bg-[#968F83] text-white hover:bg-[#8a8270] transition-colors px-4 py-2 rounded-md shrink-0">
+                        <a href="vignette_form.php?vehicle_id=<?= $uv['id'] ?>" class="flex items-center gap-2 text-sm font-medium bg-[#968F83] text-white hover:bg-[#8a8270] transition-colors px-4 py-2 rounded-md shrink-0">
                             Vignette hinzufügen
                         </a>
-
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
     </div>
-
 </main>
-
 </body>
 </html>
