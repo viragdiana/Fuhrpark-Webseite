@@ -33,14 +33,20 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
 
         <div class="flex-grow"></div>
 
-        <?php
-        $isWarningsActive = ($currentPage === 'warnings_list.php')
-                ? 'border-primary text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground';
-        ?>
-        <a href="<?= BASE_URL ?>views/vehicles/warnings_list.php" class="flex items-center gap-2 h-full border-b-2 text-sm font-medium transition-colors whitespace-nowrap pl-4 border-l border-border <?= $isWarningsActive ?>">
-            <i class="bi bi-bell"></i> Warnungen
-        </a>
+        <div class="flex items-center h-full">
+            <?php
+            $isWarningsActive = ($currentPage === 'warnings_list.php')
+                    ? 'border-primary text-foreground'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border';
+            ?>
+            <a href="<?= BASE_URL ?>warnings_list.php" class="flex items-center gap-2 h-full border-b-2 text-sm font-medium transition-colors whitespace-nowrap px-4 border-l border-border <?= $isWarningsActive ?>">
+                <i class="bi bi-bell"></i> Warnungen
+            </a>
+
+            <a href="<?= BASE_URL ?>logout.php" class="flex items-center gap-2 h-full border-b-2 border-transparent text-sm font-medium text-muted-foreground hover:text-destructive transition-colors whitespace-nowrap pl-4 border-l border-border">
+                <i class="bi bi-box-arrow-right"></i> Abmelden
+            </a>
+        </div>
     </div>
 </nav>
 

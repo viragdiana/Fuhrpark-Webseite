@@ -70,6 +70,8 @@ $labelClass = "block text-sm font-medium text-foreground mb-1.5";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?></title>
 
+    <link rel="icon" type="image/png" href="<?= BASE_URL ?>favicon.png?v=1">
+
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
