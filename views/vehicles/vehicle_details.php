@@ -7,41 +7,35 @@ if (!isset($_GET['id'])) {
 }
 
 $id = $_GET['id'];
+$today = time();
 
-$sql = "SELECT fahrzeuge.*, fahrer.vorname, fahrer.nachname 
-        FROM fahrzeuge 
-        LEFT JOIN fahrer ON fahrzeuge.fahrer_id = fahrer.id 
-        WHERE fahrzeuge.id = ?";
+$sql = "SELECT f.*, d.vorname, d.nachname 
+        FROM fahrzeuge f 
+        LEFT JOIN fahrer d ON f.fahrer_id = d.id 
+        WHERE f.id = ?";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$id]);
 $auto = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$auto) {
-    die("Fahrzeug nicht gefunden.");
-}
+if (!$auto) die("Fahrzeug nicht gefunden.");
 
-$statusClass = 'bg-secondary';
-if ($auto['status'] == 'Aktiv') $statusClass = 'bg-success-subtle text-success border border-success';
-if ($auto['status'] == 'In Reparatur') $statusClass = 'bg-warning-subtle text-warning-emphasis border border-warning';
-if ($auto['status'] == 'Ausgemustert') $statusClass = 'bg-danger-subtle text-danger border border-danger';
-
-$sofer = "Nicht zugewiesen";
-if (!empty($auto['vorname']) && !empty($auto['nachname'])) {
-    $sofer = htmlspecialchars($auto['vorname']) . " " . htmlspecialchars($auto['nachname']);
-}
+$sofer = (!empty($auto['vorname']) && !empty($auto['nachname']))
+        ? htmlspecialchars($auto['vorname'] . ' ' . $auto['nachname'])
+        : "Nicht zugewiesen";
 
 $stmtWartung = $pdo->prepare("SELECT * FROM wartung WHERE fahrzeug_id = ? ORDER BY datum DESC");
 $stmtWartung->execute([$id]);
 $wartungen = $stmtWartung->fetchAll(PDO::FETCH_ASSOC);
 
-$totalKosten = 0;
-foreach ($wartungen as $w) {
-    $totalKosten += $w['kosten'];
-}
-
 $stmtReifen = $pdo->prepare("SELECT * FROM reifen WHERE fahrzeug_id = ? ORDER BY saison DESC");
 $stmtReifen->execute([$id]);
 $reifenSaetze = $stmtReifen->fetchAll(PDO::FETCH_ASSOC);
+
+$lowestTread = 8.0;
+foreach ($reifenSaetze as $r) {
+    if ($r['profiltiefe'] < $lowestTread) $lowestTread = $r['profiltiefe'];
+}
+$tireHealth = max(0, min(100, round(($lowestTread / 8.0) * 100)));
 
 $stmtIns = $pdo->prepare("SELECT * FROM versicherung WHERE fahrzeug_id = ?");
 $stmtIns->execute([$id]);
@@ -51,6 +45,15 @@ $stmtVig = $pdo->prepare("SELECT * FROM vignette WHERE fahrzeug_id = ? ORDER BY 
 $stmtVig->execute([$id]);
 $vignetten = $stmtVig->fetchAll(PDO::FETCH_ASSOC);
 
+function getDaysRemaining($dateStr) {
+    if (empty($dateStr)) return null;
+    $diff = strtotime($dateStr) - time();
+    return ceil($diff / 86400);
+}
+
+$tuevDays = getDaysRemaining($auto['naechster_tuev']);
+$serviceDays = getDaysRemaining($auto['naechster_service']);
+$insDays = $versicherung ? getDaysRemaining($versicherung['ablaufdatum']) : null;
 ?>
 
 <!DOCTYPE html>
@@ -59,407 +62,255 @@ $vignetten = $stmtVig->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($auto['kennzeichen']) ?> - Details</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f5f3f0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-        .back-arrow {
-            color: #1e293b;
-            font-size: 1.5rem;
-            text-decoration: none;
-        }
-        .page-title {
-            font-weight: 700;
-            color: #0f172a;
-            font-size: 2rem;
-        }
-        .info-card {
-            background-color: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
-        }
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1f2937;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        .meta-label {
-            font-size: 0.85rem;
-            color: #6b7280;
-            margin-bottom: 0.25rem;
-        }
-        .meta-value {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: #111827;
-        }
-        .module-card {
-            background-color: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
-            position: relative;
-            transition: transform 0.15s ease-in-out;
-        }
-        .border-tuv { border-left: 4px solid #f97316 !important; }
-        .border-wartung { border-left: 4px solid #94a3b8 !important; }
-        .border-reifen { border-left: 4px solid #cbd5e1 !important; }
-        .border-kfz { border-left: 4px solid #ef4444 !important; }
 
-        .module-title {
-            font-weight: 600;
-            color: #111827;
-            font-size: 1.15rem;
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+
+    <style type="text/tailwindcss">
+        @theme inline {
+            --font-sans: 'Outfit', sans-serif;
+            --color-background: #F5F3F0;
+            --color-foreground: #3d3a35;
+            --color-card: #ffffff;
+            --color-primary: #968F83;
+            --color-primary-foreground: #ffffff;
+            --color-secondary: #A5A58D;
+            --color-muted: #E8E5DF;
+            --color-muted-foreground: #6b6761;
+            --color-destructive: #c75146;
+            --color-border: #d4cfc7;
         }
-        .module-subtitle {
-            font-size: 0.85rem;
-            color: #6b7280;
-        }
-        .alert-icon {
-            color: #94a3b8;
-            font-size: 1.25rem;
+        @layer base {
+            body { @apply bg-background text-foreground font-sans antialiased; }
         }
     </style>
 </head>
-<body class="bg-light">
+<body>
 
 <?php include '../../components/navbar.php'; ?>
 
-<div class="container py-4" style="max-width: 1200px;">
+<main class="max-w-5xl mx-auto px-4 py-6">
 
-    <div class="d-flex align-items-center gap-3 mb-4">
-        <a href="../../index.php" class="back-arrow"><i class="bi bi-arrow-left"></i></a>
-        <h1 class="page-title mb-0"><?= htmlspecialchars($auto['marke']) ?> <?= htmlspecialchars($auto['modell']) ?></h1>
+    <div class="flex items-center gap-4 mb-6">
+        <a href="../../index.php" class="text-foreground hover:text-primary transition-colors text-xl">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h1 class="text-3xl font-bold text-foreground">
+            <?= htmlspecialchars($auto['marke']) ?> <?= htmlspecialchars($auto['modell']) ?>
+        </h1>
     </div>
 
-    <div class="info-card shadow-sm p-4 mb-4">
-        <h2 class="section-title pb-3 mb-4">Fahrzeugdaten</h2>
-
-        <div class="row g-4 align-items-center">
-
-            <div class="col-md-6">
-                <div class="module-card shadow-sm p-4 h-100 d-flex flex-column">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex gap-3 align-items-center">
-                            <span class="fs-3 text-primary"><i class="bi bi-person-badge"></i></span>
-                            <div>
-                                <div class="module-title">Zugewiesener Fahrer</div>
-                            </div>
-                        </div>
+    <div class="bg-card rounded-xl shadow-sm border border-border mb-8 overflow-hidden">
+        <div class="px-6 py-4 border-b border-border bg-card">
+            <h2 class="text-lg font-bold text-foreground">Fahrzeugdaten</h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4">
+                <div>
+                    <div class="text-xs text-muted-foreground mb-1">Kennzeichen</div>
+                    <div class="font-bold text-foreground text-base"><?= htmlspecialchars($auto['kennzeichen']) ?></div>
+                </div>
+                <div>
+                    <div class="text-xs text-muted-foreground mb-1">VIN</div>
+                    <div class="font-medium text-foreground text-sm font-mono tracking-wide"><?= htmlspecialchars($auto['vin']) ?></div>
+                </div>
+                <div>
+                    <div class="text-xs text-muted-foreground mb-1">Fahrzeugtyp</div>
+                    <div class="font-medium text-foreground text-base"><?= htmlspecialchars($auto['fahrzeug_typ']) ?></div>
+                </div>
+                <div>
+                    <div class="text-xs text-muted-foreground mb-1 flex justify-between items-center pr-4">
+                        <span>Zugewiesener Fahrer</span>
+                        <a href="../drivers/assign_driver.php?vehicle_id=<?= $auto['id'] ?>" class="text-primary hover:underline"><i class="bi bi-pencil"></i></a>
                     </div>
-                    <div class="mt-auto text-center py-3">
-                        <?php if ($sofer === "Nicht zugewiesen" || empty($auto['vorname'])): ?>
-                            <div class="fs-1 text-light mb-2"><i class="bi bi-person-x"></i></div>
-                            <p class="small text-muted mb-3">Kein aktiver Fahrer zugewiesen.</p>
-                            <a href="../drivers/assign_driver.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-plus-lg me-1"></i> Fahrer zuweisen
-                            </a>
+                    <div class="font-medium text-foreground text-base flex items-center gap-2">
+                        <?php if ($sofer === "Nicht zugewiesen"): ?>
+                            <i class="bi bi-person-x text-muted-foreground"></i> <span class="text-muted-foreground italic">Nicht zugewiesen</span>
                         <?php else: ?>
-                            <div class="fs-1 text-primary mb-2"><i class="bi bi-person-check-fill"></i></div>
-                            <h4 class="fw-bold text-dark mb-0"><?= htmlspecialchars($auto['vorname']) . ' ' . htmlspecialchars($auto['nachname']) ?></h4>
-                            <div class="mt-3">
-                                <a href="../drivers/assign_driver.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-arrow-left-right me-1"></i> Fahrer wechseln
-                                </a>
-                            </div>
+                            <i class="bi bi-person-check text-primary"></i> <?= $sofer ?>
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
-
-            <div class="col-md-6">
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <div class="meta-label">Kennzeichen</div>
-                        <div class="meta-value text-uppercase fw-bold"><?= htmlspecialchars($auto['kennzeichen']) ?></div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="meta-label">VIN</div>
-                        <div class="meta-value" style="font-family: monospace; letter-spacing: 0.02em;"><?= htmlspecialchars($auto['vin']) ?></div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="meta-label">Typ</div>
-                        <div class="meta-value"><?= htmlspecialchars($auto['fahrzeug_typ']) ?></div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="meta-label">Marke / Modell</div>
-                        <div class="meta-value"><?= htmlspecialchars($auto['marke']) ?> <?= htmlspecialchars($auto['modell']) ?></div>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </div>
 
-    <div class="row g-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 
-        <div class="col-md-6">
-            <div class="module-card border-tuv shadow-sm p-4 h-100 d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="d-flex gap-3">
-                        <span class="fs-3 text-secondary"><i class="bi bi-file-earmark-text"></i></span>
-                        <div>
-                            <div class="module-title">TÜV</div>
-                            <div class="module-subtitle">Hauptuntersuchung</div>
-                        </div>
+        <div class="bg-card rounded-xl shadow-sm border border-border p-5 flex flex-col relative border-l-4 border-l-[#f59e0b]">
+            <?php if ($tuevDays !== null && $tuevDays <= 30): ?>
+                <i class="bi bi-exclamation-triangle absolute top-5 right-5 text-[#f59e0b] text-lg"></i>
+            <?php endif; ?>
+
+            <div class="flex items-center gap-3 mb-4">
+                <i class="bi bi-file-earmark-text text-2xl text-muted-foreground"></i>
+                <div>
+                    <h3 class="font-bold text-base text-foreground leading-tight">TÜV</h3>
+                    <p class="text-xs text-muted-foreground">Hauptuntersuchung</p>
+                </div>
+            </div>
+
+            <div class="mt-auto">
+                <div class="text-xs text-muted-foreground mb-0.5">Ablaufdatum:</div>
+                <div class="font-bold text-foreground text-lg mb-1">
+                    <?= !empty($auto['naechster_tuev']) ? date('d.m.Y', strtotime($auto['naechster_tuev'])) : 'Nicht hinterlegt' ?>
+                </div>
+                <?php if ($tuevDays !== null): ?>
+                    <div class="text-xs font-medium <?= $tuevDays < 0 ? 'text-destructive' : 'text-muted-foreground' ?>">
+                        <?= $tuevDays < 0 ? 'ABGELAUFEN!' : "$tuevDays Tage verbleibend" ?>
                     </div>
-                    <?php
-                    $tuevDate = $auto['naechster_tuev'] ?: '2099-12-31';
-                    $isTuevDue = (substr($tuevDate, 0, 7) == date('Y-m') || $tuevDate < date('Y-m-d'));
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-xl shadow-sm border border-border p-5 flex flex-col relative border-l-4 border-l-primary">
+            <?php if ($serviceDays !== null && $serviceDays <= 30): ?>
+                <i class="bi bi-exclamation-triangle absolute top-5 right-5 text-primary text-lg"></i>
+            <?php endif; ?>
+
+            <div class="flex items-center gap-3 mb-4">
+                <i class="bi bi-wrench text-2xl text-muted-foreground"></i>
+                <div>
+                    <h3 class="font-bold text-base text-foreground leading-tight">Regelmäßige Wartung</h3>
+                    <p class="text-xs text-muted-foreground">Vorbeugende Wartung</p>
+                </div>
+            </div>
+
+            <div class="mt-auto">
+                <div class="text-xs text-muted-foreground mb-0.5">Empfohlener Service:</div>
+                <div class="font-bold text-foreground text-lg mb-1">
+                    <?= !empty($auto['naechster_service']) ? date('d.m.Y', strtotime($auto['naechster_service'])) : 'Nicht hinterlegt' ?>
+                </div>
+                <?php if ($serviceDays !== null): ?>
+                    <div class="text-xs font-medium <?= $serviceDays < 0 ? 'text-destructive' : 'text-muted-foreground' ?>">
+                        <?= $serviceDays < 0 ? 'ÜBERFÄLLIG!' : "$serviceDays Tage verbleibend" ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-xl shadow-sm border border-border p-5 flex flex-col relative border-l-4 border-l-secondary relative group">
+            <a href="tire_form.php?vehicle_id=<?= $auto['id'] ?>" class="absolute top-5 right-5 text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100">
+                <i class="bi bi-pencil"></i>
+            </a>
+
+            <div class="flex items-center gap-3 mb-8">
+                <i class="bi bi-speedometer2 text-2xl text-muted-foreground"></i>
+                <div>
+                    <h3 class="font-bold text-base text-foreground leading-tight">Reifenzustand</h3>
+                    <p class="text-xs text-muted-foreground">Allgemeiner Verschleiß</p>
+                </div>
+            </div>
+
+            <div class="mt-auto">
+                <div class="flex justify-between items-end mb-2">
+                    <div class="text-xs text-muted-foreground">Verbleibende Kapazität:</div>
+                    <div class="font-bold text-foreground text-xl"><?= $tireHealth ?>%</div>
+                </div>
+                <div class="w-full bg-muted rounded-full h-2.5">
+                    <div class="bg-primary h-2.5 rounded-full" style="width: <?= $tireHealth ?>%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-xl shadow-sm border border-border p-5 flex flex-col relative border-l-4 border-l-destructive relative group">
+            <a href="insurance_form.php?vehicle_id=<?= $auto['id'] ?>" class="absolute top-5 right-5 text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100">
+                <i class="bi bi-pencil"></i>
+            </a>
+
+            <div class="flex items-center gap-3 mb-4">
+                <i class="bi bi-file-earmark-medical text-2xl text-muted-foreground"></i>
+                <div>
+                    <h3 class="font-bold text-base text-foreground leading-tight">Versicherung</h3>
+                    <p class="text-xs text-muted-foreground"><?= $versicherung ? htmlspecialchars($versicherung['gesellschaft']) : 'Keine hinterlegt' ?></p>
+                </div>
+            </div>
+
+            <div class="mt-auto">
+                <?php if ($versicherung): ?>
+                    <div class="text-xs text-muted-foreground mb-0.5">Police: <?= htmlspecialchars($versicherung['police_nr']) ?> (<?= htmlspecialchars($versicherung['deckungsart']) ?>)</div>
+                    <div class="font-bold text-foreground text-lg mb-1">Ablauf: <?= date('d.m.Y', strtotime($versicherung['ablaufdatum'])) ?></div>
+                    <div class="text-xs font-medium <?= $insDays < 0 ? 'text-destructive' : ($insDays <= 30 ? 'text-[#f59e0b]' : 'text-muted-foreground') ?>">
+                        <?= $insDays < 0 ? 'ABGELAUFEN!' : "$insDays Tage verbleibend" ?>
+                    </div>
+                <?php else: ?>
+                    <div class="text-sm font-medium text-muted-foreground italic mt-4">Bitte Versicherungsdaten ergänzen.</div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-xl shadow-sm border border-border p-5 flex flex-col relative border-l-4 border-l-[#10b981] md:col-span-2 relative group">
+            <a href="vignette_form.php?vehicle_id=<?= $auto['id'] ?>" class="absolute top-5 right-5 text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100">
+                <i class="bi bi-plus-lg"></i>
+            </a>
+
+            <div class="flex items-center gap-3 mb-4">
+                <i class="bi bi-globe-europe-africa text-2xl text-muted-foreground"></i>
+                <div>
+                    <h3 class="font-bold text-base text-foreground leading-tight">Vignetten & Maut</h3>
+                    <p class="text-xs text-muted-foreground">Aktive Auslandzulassungen</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                <?php foreach ($vignetten as $vig):
+                    $vDays = getDaysRemaining($vig['gueltig_bis']);
                     ?>
-                    <?php if ($isTuevDue): ?>
-                        <span class="alert-icon text-danger"><i class="bi bi-exclamation-triangle-fill"></i></span>
-                    <?php endif; ?>
-                </div>
-                <div class="mt-2">
-                    <div class="text-muted small">Ablaufdatum:</div>
-                    <div class="fw-bold fs-5 <?= $isTuevDue ? 'text-danger' : 'text-dark' ?>">
-                        <?= date('d.m.Y', strtotime($tuevDate)) ?>
+                    <div class="bg-background border border-border rounded-lg p-3">
+                        <div class="font-bold text-sm text-foreground"><?= htmlspecialchars($vig['land']) ?> <span class="font-normal text-muted-foreground">| <?= htmlspecialchars($vig['vignetten_typ']) ?></span></div>
+                        <div class="text-xs text-muted-foreground mt-1">Bis: <?= date('d.m.Y', strtotime($vig['gueltig_bis'])) ?></div>
+                        <div class="text-xs font-medium mt-1 <?= $vDays < 0 ? 'text-destructive' : ($vDays <= 30 ? 'text-[#f59e0b]' : 'text-[#10b981]') ?>">
+                            <?= $vDays < 0 ? 'Abgelaufen' : "$vDays Tage verbleibend" ?>
+                        </div>
                     </div>
-                    <?php if ($tuevDate < date('Y-m-d')): ?>
-                        <div class="text-danger small mt-1 fw-bold">Überfällig!</div>
-                    <?php endif; ?>
-                </div>
+                <?php endforeach; ?>
+                <?php if (empty($vignetten)): ?>
+                    <div class="text-sm text-muted-foreground italic py-2">Keine aktiven Vignetten.</div>
+                <?php endif; ?>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="module-card border-wartung shadow-sm p-4 h-100 d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="d-flex gap-3">
-                        <span class="fs-3 text-secondary"><i class="bi bi-wrench"></i></span>
-                        <div>
-                            <div class="module-title">Regelmäßige Wartung</div>
-                            <div class="module-subtitle">Vorbeugende Wartung</div>
-                        </div>
-                    </div>
-                    <?php
-                    $serviceDate = $auto['naechster_service'] ?: '2099-12-31';
-                    $isServiceDue = (substr($serviceDate, 0, 7) == date('Y-m') || $serviceDate < date('Y-m-d'));
-                    ?>
-                    <?php if ($isServiceDue): ?>
-                        <span class="alert-icon text-danger"><i class="bi bi-exclamation-triangle-fill"></i></span>
-                    <?php endif; ?>
-                </div>
-                <div class="mt-2">
-                    <div class="text-muted small">Fälligkeitsdatum:</div>
-                    <div class="fw-bold fs-5 <?= $isServiceDue ? 'text-danger' : 'text-dark' ?>">
-                        <?= date('d.m.Y', strtotime($serviceDate)) ?>
-                    </div>
-                    <?php if ($serviceDate < date('Y-m-d')): ?>
-                        <div class="text-danger small mt-1 fw-bold">Überfällig!</div>
-                    <?php endif; ?>
-                </div>
-            </div>
+    </div>
+
+    <div class="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+        <div class="px-6 py-4 border-b border-border bg-card flex justify-between items-center">
+            <h2 class="text-lg font-bold text-foreground">Service-Historie</h2>
+            <a href="../service/service_form.php?vehicle_id=<?= $auto['id'] ?>" class="text-sm font-medium text-primary hover:underline">
+                <i class="bi bi-plus-lg mr-1"></i>Eintrag hinzufügen
+            </a>
         </div>
 
-        <div class="col-md-6">
-            <div class="module-card border-reifen shadow-sm p-4 h-100 d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="d-flex gap-3">
-                        <span class="fs-3 text-secondary"><i class="bi bi-record-circle"></i></span>
-                        <div>
-                            <div class="module-title">Reifenzustand</div>
-                            <div class="module-subtitle">Verwaltung & Lagerung</div>
+        <div class="p-6 space-y-4 bg-[#F5F3F0]/50">
+            <?php foreach ($wartungen as $w): ?>
+                <div class="bg-card border border-border rounded-lg p-4 flex flex-col sm:flex-row justify-between gap-4 transition-shadow hover:shadow-sm">
+                    <div>
+                        <div class="text-xs text-muted-foreground mb-1 flex items-center gap-2">
+                            <i class="bi bi-calendar3"></i> <?= date('d.m.Y', strtotime($w['datum'])) ?>
+                        </div>
+                        <div class="font-bold text-foreground text-base flex items-center gap-2">
+                            <i class="bi bi-wrench text-muted-foreground text-sm"></i> <?= htmlspecialchars($w['reparatur_typ']) ?>
+                        </div>
+                        <div class="text-sm text-muted-foreground mt-1 flex items-center gap-2">
+                            <i class="bi bi-building"></i> <?= htmlspecialchars($w['werkstatt']) ?>
                         </div>
                     </div>
-                    <a href="tire_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Reifensatz verwalten">
-                        <i class="bi bi-plus-lg"></i> / <i class="bi bi-pencil"></i>
-                    </a>
-                </div>
-
-                <div class="mt-2 flex-grow-1">
-                    <?php if (empty($reifenSaetze)): ?>
-                        <div class="text-muted small mt-3">Keine Reifensätze registriert.</div>
-                    <?php else: ?>
-                        <ul class="list-group list-group-flush mb-0 mt-2">
-                            <?php foreach ($reifenSaetze as $r):
-                                $isLow = $r['profiltiefe'] < 1.6;
-                                ?>
-                                <li class="list-group-item px-0 d-flex justify-content-between align-items-center bg-transparent border-bottom-0 pb-2 pt-2">
-                                    <div>
-                                        <div class="text-secondary fw-bold text-dark">
-                                            <i class="bi <?= $r['saison'] == 'Winter' ? 'bi-snow' : ($r['saison'] == 'Sommer' ? 'bi-sun' : 'bi-cloud-sun') ?> me-1 text-primary"></i>
-                                            <?= htmlspecialchars($r['saison']) ?> <span class="fw-normal text-muted">| <?= htmlspecialchars($r['marke']) ?></span>
-                                        </div>
-                                        <div class="small text-muted mt-1" style="font-size: 0.8rem;">
-                                            <i class="bi bi-geo-alt-fill me-1"></i><?= htmlspecialchars($r['lagerort']) ?>
-                                        </div>
-                                    </div>
-
-                                    <div class="fw-bold fs-5 text-end <?= $isLow ? 'text-danger' : 'text-dark' ?>">
-                                        <?= number_format($r['profiltiefe'], 1, ',', '.') ?> mm
-                                        <?php if ($isLow): ?>
-                                            <i class="bi bi-exclamation-triangle-fill text-danger ms-1" title="Kritische Profiltiefe!"></i>
-                                        <?php endif; ?>
-                                    </div>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="module-card border-kfz shadow-sm p-4 h-100 d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="d-flex gap-3">
-                        <span class="fs-3 text-secondary"><i class="bi bi-shield-check"></i></span>
-                        <div>
-                            <div class="module-title">Kfz-Versicherung</div>
-                            <div class="module-subtitle">Deckung & Fristen</div>
-                        </div>
-                    </div>
-                    <a href="insurance_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Versicherung verwalten">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                </div>
-
-                <div class="mt-2 flex-grow-1">
-                    <?php if (!$versicherung): ?>
-                        <div class="text-muted small mt-3">
-                            <i class="bi bi-exclamation-circle text-danger me-1"></i> Keine Versicherungspolice hinterlegt.
-                        </div>
-                    <?php else:
-                        $isExpiring = $versicherung['ablaufdatum'] < date('Y-m-d', strtotime('+30 days'));
-                        $isDeadlineNear = $versicherung['kuendigungsfrist'] < date('Y-m-d', strtotime('+14 days')) && $versicherung['kuendigungsfrist'] >= date('Y-m-d');
-                        ?>
-                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2 mt-2">
-                            <span class="text-muted small">Gesellschaft:</span>
-                            <span class="fw-bold text-dark"><?= htmlspecialchars($versicherung['gesellschaft']) ?></span>
-                        </div>
-                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
-                            <span class="text-muted small">Police / Art:</span>
-                            <span class="fw-medium text-dark"><?= htmlspecialchars($versicherung['police_nr']) ?> (<?= htmlspecialchars($versicherung['deckungsart']) ?>)</span>
-                        </div>
-
-                        <div class="row mt-3">
-                            <div class="col-6 border-end">
-                                <div class="text-muted small" style="font-size: 0.75rem;">Ablaufdatum:</div>
-                                <div class="fw-bold <?= $isExpiring ? 'text-danger' : 'text-dark' ?>">
-                                    <?= date('d.m.Y', strtotime($versicherung['ablaufdatum'])) ?>
-                                    <?= $isExpiring ? '<i class="bi bi-exclamation-triangle-fill ms-1" title="Läuft bald ab!"></i>' : '' ?>
-                                </div>
-                            </div>
-                            <div class="col-6 ps-3">
-                                <div class="text-muted small" style="font-size: 0.75rem;">Kündigungsfrist:</div>
-                                <div class="fw-bold <?= $isDeadlineNear ? 'text-warning' : 'text-dark' ?>">
-                                    <?= date('d.m.Y', strtotime($versicherung['kuendigungsfrist'])) ?>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="module-card shadow-sm p-4 h-100 d-flex flex-column" style="border-left: 4px solid #10b981;">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="d-flex gap-3">
-                        <span class="fs-3 text-secondary"><i class="bi bi-globe-europe-africa"></i></span>
-                        <div>
-                            <div class="module-title">Maut & Vignetten</div>
-                            <div class="module-subtitle">Auslandzulassungen</div>
-                        </div>
-                    </div>
-                    <a href="vignette_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Vignette hinzufügen">
-                        <i class="bi bi-plus-lg"></i>
-                    </a>
-                </div>
-
-                <div class="mt-2 flex-grow-1">
-                    <?php if (empty($vignetten)): ?>
-                        <div class="text-muted small mt-3">Keine aktiven Vignetten hinterlegt.</div>
-                    <?php else: ?>
-                        <ul class="list-group list-group-flush mb-0 mt-2">
-                            <?php foreach ($vignetten as $vig):
-                                $isExpiring = $vig['gueltig_bis'] < date('Y-m-d', strtotime('+30 days'));
-                                $isExpired = $vig['gueltig_bis'] < date('Y-m-d');
-                                ?>
-                                <li class="list-group-item px-0 d-flex justify-content-between align-items-center bg-transparent border-bottom-0 pb-2 pt-2">
-                                    <div>
-                                        <div class="fw-bold text-dark">
-                                            <?= htmlspecialchars($vig['land']) ?> <span class="fw-normal text-muted">| <?= htmlspecialchars($vig['vignetten_typ']) ?></span>
-                                        </div>
-                                        <div class="small text-muted mt-1" style="font-size: 0.8rem;">
-                                            Von: <?= date('d.m.Y', strtotime($vig['gueltig_von'])) ?>
-                                        </div>
-                                    </div>
-
-                                    <div class="text-end">
-                                        <div class="small text-muted" style="font-size: 0.75rem;">Ablaufdatum:</div>
-                                        <div class="fw-bold fs-6 <?= $isExpired ? 'text-danger' : ($isExpiring ? 'text-warning' : 'text-success') ?>">
-                                            <?= date('d.m.Y', strtotime($vig['gueltig_bis'])) ?>
-                                            <?php if ($isExpired): ?>
-                                                <i class="bi bi-x-circle-fill ms-1" title="Abgelaufen!"></i>
-                                            <?php elseif ($isExpiring): ?>
-                                                <i class="bi bi-exclamation-triangle-fill ms-1" title="Läuft in weniger als 30 Tagen ab!"></i>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 mt-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                    <h5 class="mb-0 text-dark fw-bold">
-                        <i class="bi bi-journal-text me-2 text-primary"></i>Service- & Reparaturhistorie
-                    </h5>
-                    <a href="../service/service_form.php?vehicle_id=<?= $auto['id'] ?>" class="btn btn-sm btn-dark shadow-sm">
-                        <i class="bi bi-plus-lg me-1"></i> Wartung protokollieren
-                    </a>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                            <tr>
-                                <th class="ps-4">Datum</th>
-                                <th>Werkstatt</th>
-                                <th>Art der Reparatur</th>
-                                <th class="text-end pe-4">Kosten</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <?php foreach ($wartungen as $w): ?>
-                                <tr>
-                                    <td class="ps-4"><?= date('d.m.Y', strtotime($w['datum'])) ?></td>
-                                    <td><i class="bi bi-shop text-muted me-2"></i><?= htmlspecialchars($w['werkstatt']) ?></td>
-                                    <td><?= htmlspecialchars($w['reparatur_typ']) ?></td>
-                                    <td class="text-end pe-4 fw-bold"><?= number_format($w['kosten'], 2, ',', '.') ?> €</td>
-                                </tr>
-                            <?php endforeach; ?>
-
-                            <?php if (empty($wartungen)): ?>
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted py-5">
-                                        <i class="bi bi-wrench fs-2 text-light d-block mb-2"></i>
-                                        Keine historischen Service-Einträge vorhanden.
-                                    </td>
-                                </tr>
-                            <?php else: ?>
-                                <tr class="table-light border-top-2">
-                                    <td colspan="3" class="text-end fw-bold text-uppercase text-muted" style="font-size: 0.85rem;">Gesamtkosten:</td>
-                                    <td class="text-end pe-4 fw-bold fs-5 text-dark"><?= number_format($totalKosten, 2, ',', '.') ?> €</td>
-                                </tr>
-                            <?php endif; ?>
-                            </tbody>
-                        </table>
+                    <div class="sm:text-right font-bold text-foreground self-start sm:self-center bg-muted/50 px-3 py-1.5 rounded-md border border-border">
+                        <?= number_format($w['kosten'], 2, ',', '.') ?> €
                     </div>
                 </div>
-            </div>
-        </div>
+            <?php endforeach; ?>
 
-    </div> </div> </body>
+            <?php if (empty($wartungen)): ?>
+                <div class="text-center py-6 text-muted-foreground">
+                    <i class="bi bi-inbox text-3xl mb-2 block"></i>
+                    Noch keine Service-Einträge vorhanden.
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+</main>
+
+</body>
 </html>
